@@ -22,13 +22,14 @@ const int freq = 490;
 const int channel = 0;
 const int resolution = 8; // 8 bits de résolution (de 0 à 255)
 
-// variables globales
+// constantes globales
 const int rapportReductionMoteur = 53;
 const int rayonRoue = 66;
+const double pi = 3.1415926535897932384626433;
 
+// variables globales
 int compteurDroite = 0;
 int compteurGauche = 0;
-double pi = 3.1415926535897932384626433;
 bool etatBoutonOnOff = true;
 unsigned int choix = 0;
 
@@ -121,7 +122,7 @@ void carre ()
 {
 	for (int i = 0; i = 4; i++)
 	{
-		toutDroit(100);
+		toutDroit(500);
 		tournerDroite(90);
 	}
 }
@@ -130,14 +131,37 @@ void triangle ()
 {
 	for (int i = 0; i = 3; i++)
 	{
-		toutDroit(10);
+		toutDroit(500);
 		tournerDroite(120);
 	}
 }
 
+void trajectoireCirculaire (int rayonTrajectoire, int angle) // Rayon en millimètres et angle en degrès
+{
+	int rayonCercleExterieur = rayonTrajectoire + 100; // Rayon du cercle parcouru par la roue extérieure
+	int rayonCercleInterieur = rayonTrajectoire - 100; // Rayon du cercle parcouru par la roue intérieure
+
+	int longueurArcExterieur = rayonCercleExterieur*(pi/180)*angle; // Longueur de l'arc parcouru par la roue extérieure
+	int longueurArcInterieur = rayonCercleInterieur*(pi/180)*angle; // Longueur de l'arc parcouru par la roue intérieure
+
+	int ratioDeuxArcs = longueurArcInterieur/longueurArcExterieur;
+
+	analogWrite(PIN_DIR_MOTOR_LEFT, 255);
+	analogWrite(PIN_DIR_MOTOR_RIGHT, 255*ratioDeuxArcs);
+
+	while (longueurParcourueArcExterieur < longueurArcExterieur && longueurParcourueArcInterieur < longueurArcInterieur)
+	{
+		longueurParcourueArcExterieur = pi*(rayonRoue/rapportReductionMoteur)*compteurGauche;
+		longueurParcourueArcInterieur = pi*(rayonRoue/rapportReductionMoteur)*compteurDroite;
+	}
+
+	analogWrite(PIN_DIR_MOTOR_LEFT, 0);
+	analogWrite(PIN_DIR_MOTOR_RIGHT, 0);
+}
+
 void cercle ()
 {
-
+	trajectoireCirculaire(250, 360); // On fait faire au robot une trajectoire circulaire de 250mm de rayon sur 360 degrés
 }
 
 void errorColor () // affiche la couleur d'erreur (marron)
@@ -207,7 +231,7 @@ void loop ()
 			analogWrite(PIN_LED_BLUE, 238);
 			if (digitalRead(PIN_BUTTON_VALID))
 			{
-				// cercle();
+				cercle();
 			}
 			break;
 
