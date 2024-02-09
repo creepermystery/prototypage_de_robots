@@ -17,5 +17,8 @@ Chacun de ces modes change la couleur de la DEL RVB dans une couleur différente
 - Jaune
 - Bleue
 - Violette
+
 Nous avons choisi d'ajouter une couleur marron, correspondant à un erreur.
 
+## Matériel
+Le programme tourne sur un ESP-WROOM-32
