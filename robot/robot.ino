@@ -6,6 +6,14 @@ const int PIN_DIR_MOTOR_RIGHT = 4;
 const int PIN_INTERRUPT_LEFT = 6;
 const int PIN_INTERRUPT_RIGHT = 7;
 
+// pins IR terrestres
+const int PIN_FLOOR_IR_LEFT = 18;
+const int PIN_FLOOR_IR_RIGHT = 19;
+
+//pins IR frontaux
+const int PIN_FRONT_IR_LEFT = 20;
+const int PIN_FRONT_IR_RIGHT = 21;
+
 // pins boutons
 const int PIN_BUTTON_VALID = 14;
 const int PIN_BUTTON_UP = 15;
@@ -30,7 +38,7 @@ const double pi = 3.1415926535897932384626433;
 // variables globales
 int compteurDroite = 0;
 int compteurGauche = 0;
-bool etatBoutonOnOff = true;
+bool etatBoutonOnOff = false;
 unsigned int choix = 0;
 
 void setup ()
@@ -40,8 +48,12 @@ void setup ()
 	attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT_RIGHT), triggerOdometreGauche(), FALLING);
 
 	// interruptions boutons choix
-	attachInterrupt(digitalPinToInterrupt(PIN_BUTTON_DOWN), triggerOdometreDroite(), FALLING);
-	attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT_RIGHT), triggerOdometreGauche(), FALLING);
+	attachInterrupt(digitalPinToInterrupt(PIN_BUTTON_DOWN), decrementerChoix(), FALLING);
+	attachInterrupt(digitalPinToInterrupt(PIN_BUTTON_UP), incrementerChoix(), FALLING);
+
+	// interruption on/off
+	attachInterrupt(digitalPinToInterrupt(PIN_BUTTON_ON_OFF), swapOnOff(), FALLING);
+
 }
 
 void triggerOdometreDroite ()
@@ -57,19 +69,18 @@ void triggerOdometreGauche ()
 void incrementerChoix ()
 {
 	choix++;
-	if (choix == 7)
-	{
-		choix = 1;
-	}
+	if (choix == 7) choix = 1;
 }
 
 void decrementerChoix ()
 {
 	choix--;
-	if (choix == 0)
-	{
-		choix = 6;
-	}
+	if (choix == 0) choix = 6;
+}
+
+void swapOnOff ()
+{
+	etatBoutonOnOff = !etatBoutonOnOff;
 }
 
 void tournerDroite (int angle)
@@ -171,8 +182,45 @@ void errorColor () // affiche la couleur d'erreur (marron)
 	analogWrite(PIN_LED_BLUE, 42);
 }
 
+void attendre (int temps)
+{
+	unsigned long currentTime = millis();
+	while (millis() < currentTime + temps);
+}
+
+void suiviLigne ()
+{
+	int valuePWMLeft = 255;
+	int valuePWMRight = 255;
+
+	while (choix == 1)
+	{
+		if (digitalRead(PIN_FLOOR_IR_LEFT)) valuePWMLeft = 0;
+		else valuePWMLeft = 255;
+
+		if (digitalRead(PIN_FLOOR_IR_RIGHT)) valuePWMRight = 0;
+		else valuePWMRight = 255;
+
+		analogWrite(PIN_MOTOR_LEFT, valuePWMLeft);
+		analogWrite(PIN_MOTOR_RIGHT, valuePWMRight);
+	}
+}
+
+void evitementObstacles ()
+{
+	int valuePWMLeft = 255;
+	int valuePWMRight = 255;
+
+	while (choix == 2)
+	{
+		if (analogRead(PIN_FRONT_IR_LEFT) >700);
+		if (analogRead(PIN_FRONT_IR_RIGHT) > 700);
+	}
+}
+
 void loop ()
 {
+	while (!etatBoutonOnOff);
 	switch (choix)
 	{
 		case 1: // suivi de ligne, DEL verte
@@ -181,7 +229,8 @@ void loop ()
 			analogWrite(PIN_LED_BLUE, 0);
 			if (digitalRead(PIN_BUTTON_VALID))
 			{
-				// suiviLigne();
+				suiviLigne();
+				attendre(500);
 			}
 			break;
 
@@ -191,7 +240,8 @@ void loop ()
 			analogWrite(PIN_LED_BLUE, 0);
 			if (digitalRead(PIN_BUTTON_VALID))
 			{
-				// evitementObstacles();
+				evitementObstacles();
+				attendre(500);
 			}
 			break;
 
@@ -202,6 +252,7 @@ void loop ()
 			if (digitalRead(PIN_BUTTON_VALID))
 			{
 				toutDroit(10);
+				attendre(500);
 			}
 			break;
 
@@ -212,6 +263,7 @@ void loop ()
 			if (digitalRead(PIN_BUTTON_VALID))
 			{
 				carre();
+				attendre(500);
 			}
 			break;
 
@@ -222,6 +274,7 @@ void loop ()
 			if (digitalRead(PIN_BUTTON_VALID))
 			{
 				triangle();
+				attendre(500);
 			}
 			break;
 
@@ -232,6 +285,7 @@ void loop ()
 			if (digitalRead(PIN_BUTTON_VALID))
 			{
 				cercle();
+				attendre(500);
 			}
 			break;
 
