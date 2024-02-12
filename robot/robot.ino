@@ -31,7 +31,7 @@ const int channel = 0;
 const int resolution = 8; // 8 bits de résolution (de 0 à 255)
 
 // constantes globales
-const int rapportReductionMoteur = 53;
+const float rapportReductionMoteur = 52.734;
 const int rayonRoue = 66;
 const double pi = 3.1415926535897932384626433;
 
@@ -85,6 +85,9 @@ void swapOnOff ()
 
 void tournerDroite (int angle)
 {
+  compteurDroite = 0;
+  compteurGauche = 0;
+  
 	analogWrite(PIN_MOTOR_LEFT, 70);
 	digitalWrite(PIN_DIR_MOTOR_LEFT, HIGH);
 	analogWrite(PIN_MOTOR_RIGHT, 70);
@@ -100,6 +103,9 @@ void tournerDroite (int angle)
 
 void tournerGauche (int angle)
 {
+  compteurDroite = 0;
+  compteurGauche = 0;
+  
 	analogWrite(PIN_MOTOR_LEFT, 70);
 	digitalWrite(PIN_DIR_MOTOR_LEFT, LOW);
 	analogWrite(PIN_MOTOR_RIGHT, 70);
@@ -115,7 +121,7 @@ void tournerGauche (int angle)
 
 void toutDroit (int distanceCommandee)
 {
-	int distanceEstimee = 0;
+	float distanceEstimee = 0.0;
 
 	analogWrite(PIN_MOTOR_LEFT, 255);
 	analogWrite(PIN_MOTOR_RIGHT, 255);
@@ -152,10 +158,10 @@ void trajectoireCirculaire (int rayonTrajectoire, int angle) // Rayon en millim�
 	int rayonCercleExterieur = rayonTrajectoire + 100; // Rayon du cercle parcouru par la roue extérieure
 	int rayonCercleInterieur = rayonTrajectoire - 100; // Rayon du cercle parcouru par la roue intérieure
 
-	int longueurArcExterieur = rayonCercleExterieur*(pi/180)*angle; // Longueur de l'arc parcouru par la roue extérieure
-	int longueurArcInterieur = rayonCercleInterieur*(pi/180)*angle; // Longueur de l'arc parcouru par la roue intérieure
+	float longueurArcExterieur = rayonCercleExterieur*(pi/180)*angle; // Longueur de l'arc parcouru par la roue extérieure
+	float longueurArcInterieur = rayonCercleInterieur*(pi/180)*angle; // Longueur de l'arc parcouru par la roue intérieure
 
-	int ratioDeuxArcs = longueurArcInterieur/longueurArcExterieur;
+	float ratioDeuxArcs = longueurArcInterieur/longueurArcExterieur;
 
 	analogWrite(PIN_DIR_MOTOR_LEFT, 255);
 	analogWrite(PIN_DIR_MOTOR_RIGHT, 255*ratioDeuxArcs);
