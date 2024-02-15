@@ -78,15 +78,15 @@ void setup ()
     ledcSetup(channelMotorLeft, freq, resolution);
     ledcSetup(channelMotorRight, freq, resolution);
     ledcAttachPin(PIN_MOTOR_LEFT, channelMotorLeft);
-    ledcAttachPin(PIN_MOTOR_LEFT, channelMotorRight);
+    ledcAttachPin(PIN_MOTOR_RIGHT, channelMotorRight);
 
     // Setup les PWM de la DEL
     ledcSetup(channelLedRed, freq, resolution);
     ledcSetup(channelLedGreen, freq, resolution);
     ledcSetup(channelLedBlue, freq, resolution);
-    ledcAttachPin(PIN_MOTOR_LEFT, channelLedRed);
-    ledcAttachPin(PIN_MOTOR_LEFT, channelLedGreen);
-    ledcAttachPin(PIN_MOTOR_LEFT, channelLedBlue);
+    ledcAttachPin(PIN_LED_RED, channelLedRed);
+    ledcAttachPin(PIN_LED_GREEN, channelLedGreen);
+    ledcAttachPin(PIN_LED_BLUE, channelLedBlue);
 
     // Interruptions odomètre
     attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT_LEFT), triggerOdometreDroite, FALLING);
