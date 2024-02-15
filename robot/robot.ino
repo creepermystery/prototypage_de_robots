@@ -1,29 +1,29 @@
 // pins moteurs
-const int PIN_MOTOR_LEFT = 3;
-const int PIN_MOTOR_RIGHT = 5;
-const int PIN_DIR_MOTOR_LEFT = 2;
-const int PIN_DIR_MOTOR_RIGHT = 4;
-const int PIN_INTERRUPT_LEFT = 6;
-const int PIN_INTERRUPT_RIGHT = 7;
+const int PIN_MOTOR_LEFT = 36;
+const int PIN_MOTOR_RIGHT = 39;
+const int PIN_DIR_MOTOR_LEFT = 34;
+const int PIN_DIR_MOTOR_RIGHT = 35;
+const int PIN_INTERRUPT_LEFT = 32;
+const int PIN_INTERRUPT_RIGHT = 33;
 
 // pins IR terrestres
-const int PIN_FLOOR_IR_LEFT = 18;
-const int PIN_FLOOR_IR_RIGHT = 19;
+const int PIN_FLOOR_IR_LEFT = 23;
+const int PIN_FLOOR_IR_RIGHT = 22;
 
 //pins IR frontaux
-const int PIN_FRONT_IR_LEFT = 20;
-const int PIN_FRONT_IR_RIGHT = 21;
+const int PIN_FRONT_IR_LEFT = 25;
+const int PIN_FRONT_IR_RIGHT = 26;
 
 // pins boutons
-const int PIN_BUTTON_VALID = 14;
-const int PIN_BUTTON_UP = 15;
-const int PIN_BUTTON_DOWN = 16;
-const int PIN_BUTTON_ON_OFF = 17;
+const int PIN_BUTTON_VALID = 27;
+const int PIN_BUTTON_UP = 14;
+const int PIN_BUTTON_DOWN = 12;
+const int PIN_BUTTON_ON_OFF = 13;
 
 // pins DELs
-const int PIN_LED_RED = 11;
-const int PIN_LED_GREEN = 13;
-const int PIN_LED_BLUE = 12;
+const int PIN_LED_RED = 2;
+const int PIN_LED_GREEN = 4;
+const int PIN_LED_BLUE = 15;
 
 // paramètres PWM
 const int freq = 490;
@@ -62,15 +62,15 @@ void setup ()
     ledcAttachPin(PIN_MOTOR_LEFT, channelLedBlue);
 
     // Interruptions odomètre
-    attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT_LEFT), triggerOdometreDroite(), FALLING);
-    attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT_RIGHT), triggerOdometreGauche(), FALLING);
+    attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT_LEFT), triggerOdometreDroite, FALLING);
+    attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT_RIGHT), triggerOdometreGauche, FALLING);
 
     // Interruptions boutons choix
-    attachInterrupt(digitalPinToInterrupt(PIN_BUTTON_DOWN), decrementerChoix(), FALLING);
-    attachInterrupt(digitalPinToInterrupt(PIN_BUTTON_UP), incrementerChoix(), FALLING);
+    attachInterrupt(digitalPinToInterrupt(PIN_BUTTON_DOWN), decrementerChoix, FALLING);
+    attachInterrupt(digitalPinToInterrupt(PIN_BUTTON_UP), incrementerChoix, FALLING);
 
     // Interruption on/off
-    attachInterrupt(digitalPinToInterrupt(PIN_BUTTON_ON_OFF), swapOnOff(), FALLING);
+    attachInterrupt(digitalPinToInterrupt(PIN_BUTTON_ON_OFF), swapOnOff, FALLING);
 
 }
 
