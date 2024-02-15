@@ -40,13 +40,47 @@ const int rayonRoue = 66;
 const double pi = 3.1415926535897932384626433;
 
 // variables globales
-int compteurDroite = 0;
-int compteurGauche = 0;
-bool etatBoutonOnOff = false;
-unsigned int choix = 0;
+volatile int compteurDroite = 0;
+volatile int compteurGauche = 0;
+volatile bool etatBoutonOnOff = 0;
+volatile int choix = 1;
+volatile bool validPressed = 0;
+
+void swapValid ()
+{
+    validPressed = 1;
+}
+
+void triggerOdometreDroite () // Fonction de comptage de l'odomètre de droite
+{
+    compteurDroite++;
+}
+
+void triggerOdometreGauche () // Fonction de comptage de l'odomètre de gauche
+{
+    compteurGauche++;
+}
+
+void incrementerChoix () // Fonction d'incrémentation du bouton de choix "+" (UP)
+{
+    choix++;
+    if (choix >= 7) choix = 1;
+}
+
+void decrementerChoix () // Fonction de décrémentation du bouton de choix "-" (DOWN) 
+{
+    choix--;
+    if (choix <= 0) choix = 6;
+}
+
+void swapOnOff () // Fonction de passage de ON à OFF
+{
+    etatBoutonOnOff = !etatBoutonOnOff;
+}
 
 void setup ()
 {
+    Serial.begin(9600);
     // Pins moteurs
     pinMode(PIN_MOTOR_LEFT, OUTPUT);
     pinMode(PIN_MOTOR_RIGHT, OUTPUT);
@@ -67,65 +101,34 @@ void setup ()
     pinMode(PIN_BUTTON_VALID, INPUT);
     pinMode(PIN_BUTTON_UP, INPUT);
     pinMode(PIN_BUTTON_DOWN, INPUT);
-    pinMode(PIN_BUTTON_ON_OFF, INPUT);
+    pinMode(PIN_BUTTON_ON_OFF, INPUT_PULLUP);
 
     // Pins DELs
     pinMode(PIN_LED_RED, OUTPUT);
     pinMode(PIN_LED_GREEN, OUTPUT);
     pinMode(PIN_LED_BLUE, OUTPUT);
 
-    // Setup les PWM du moteur
-    ledcSetup(channelMotorLeft, freq, resolution);
-    ledcSetup(channelMotorRight, freq, resolution);
-    ledcAttachPin(PIN_MOTOR_LEFT, channelMotorLeft);
-    ledcAttachPin(PIN_MOTOR_RIGHT, channelMotorRight);
-
-    // Setup les PWM de la DEL
-    ledcSetup(channelLedRed, freq, resolution);
-    ledcSetup(channelLedGreen, freq, resolution);
-    ledcSetup(channelLedBlue, freq, resolution);
     ledcAttachPin(PIN_LED_RED, channelLedRed);
     ledcAttachPin(PIN_LED_GREEN, channelLedGreen);
     ledcAttachPin(PIN_LED_BLUE, channelLedBlue);
 
+    ledcSetup(channelLedRed, freq, resolution);
+    ledcSetup(channelLedGreen, freq, resolution);
+    ledcSetup(channelLedBlue, freq, resolution);
+
     // Interruptions odomètre
-    attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT_LEFT), triggerOdometreDroite, FALLING);
-    attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT_RIGHT), triggerOdometreGauche, FALLING);
+    attachInterrupt(PIN_INTERRUPT_LEFT, triggerOdometreDroite, FALLING);
+    attachInterrupt(PIN_INTERRUPT_RIGHT, triggerOdometreGauche, FALLING);
 
     // Interruptions boutons choix
-    attachInterrupt(digitalPinToInterrupt(PIN_BUTTON_DOWN), decrementerChoix, FALLING);
-    attachInterrupt(digitalPinToInterrupt(PIN_BUTTON_UP), incrementerChoix, FALLING);
+    attachInterrupt(PIN_BUTTON_DOWN, decrementerChoix, FALLING);
+    attachInterrupt(PIN_BUTTON_UP, incrementerChoix, FALLING);
 
     // Interruption on/off
-    attachInterrupt(digitalPinToInterrupt(PIN_BUTTON_ON_OFF), swapOnOff, FALLING);
+    attachInterrupt(PIN_BUTTON_ON_OFF, swapOnOff, FALLING);
 
-}
-
-void triggerOdometreDroite () // Fonction de comptage de l'odomètre de droite
-{
-    compteurDroite++;
-}
-
-void triggerOdometreGauche () // Fonction de comptage de l'odomètre de gauche
-{
-    compteurGauche++;
-}
-
-void incrementerChoix () // Fonction d'incrémentation du bouton de choix "+" (UP)
-{
-    choix++;
-    if (choix == 7) choix = 1;
-}
-
-void decrementerChoix () // Fonction de décrémentation du bouton de choix "-" (DOWN) 
-{
-    choix--;
-    if (choix == 0) choix = 6;
-}
-
-void swapOnOff () // Fonction de passage de ON à OFF
-{
-    etatBoutonOnOff = !etatBoutonOnOff;
+    // Interruption valid
+    attachInterrupt(PIN_BUTTON_VALID, swapValid, FALLING);
 }
 
 void tournerDroite (int angle) 
@@ -133,16 +136,16 @@ void tournerDroite (int angle)
     compteurDroite = 0;
     compteurGauche = 0;
   
-    analogWrite(PIN_MOTOR_LEFT, 70);                // On choisit les bonnes direction de rotation des roues et on démarre le virage
+    ledcWrite(channelMotorLeft, 70);                // On choisit les bonnes direction de rotation des roues et on démarre le virage
     digitalWrite(PIN_DIR_MOTOR_LEFT, HIGH);
-    analogWrite(PIN_MOTOR_RIGHT, 70);
+    ledcWrite(channelMotorRight, 70);
     digitalWrite(PIN_DIR_MOTOR_RIGHT, LOW);
 
     while ((compteurDroite + compteurGauche)/2 < 10); // On attend que le virage soit fait
 
-    analogWrite(PIN_MOTOR_LEFT, 0);                 // On remet toutes les sorties à zéro
+    ledcWrite(channelMotorLeft, 0);                 // On remet toutes les sorties à zéro
     digitalWrite(PIN_DIR_MOTOR_LEFT, LOW);
-    analogWrite(PIN_MOTOR_RIGHT, 0);
+    ledcWrite(channelMotorRight, 0);
     digitalWrite(PIN_DIR_MOTOR_RIGHT, LOW);
 }
 
@@ -151,16 +154,16 @@ void tournerGauche (int angle)
     compteurDroite = 0;
     compteurGauche = 0;
 
-    analogWrite(PIN_MOTOR_LEFT, 70);            // On choisit les bonnes direction de rotation des roues et on démarre le virage
+    ledcWrite(channelMotorLeft, 70);            // On choisit les bonnes direction de rotation des roues et on démarre le virage
     digitalWrite(PIN_DIR_MOTOR_LEFT, LOW);
-    analogWrite(PIN_MOTOR_RIGHT, 70);
+    ledcWrite(channelMotorRight, 70);
     digitalWrite(PIN_DIR_MOTOR_RIGHT, HIGH);
 
     while ((compteurDroite + compteurGauche)/2 < 10); // On attend que le virage soit fait
 
-    analogWrite(PIN_MOTOR_LEFT, 0);             // On remet toutes les sorties à zéro
+    ledcWrite(channelMotorLeft, 0);             // On remet toutes les sorties à zéro
     digitalWrite(PIN_DIR_MOTOR_LEFT, LOW);
-    analogWrite(PIN_MOTOR_RIGHT, 0);
+    ledcWrite(channelMotorRight, 0);
     digitalWrite(PIN_DIR_MOTOR_RIGHT, LOW);
 }
 
@@ -168,13 +171,13 @@ void toutDroit (int distanceCommandee)
 {
     float distanceEstimee = 0.0;
 
-    analogWrite(PIN_MOTOR_LEFT, 255);
-    analogWrite(PIN_MOTOR_RIGHT, 255);
+    ledcWrite(channelMotorLeft, 255);
+    ledcWrite(channelMotorRight, 255);
 
     while (distanceEstimee < distanceCommandee) distanceEstimee = pi*(rayonRoue/rapportReductionMoteur)*(compteurDroite+compteurGauche); // Tant que la distance estimée n'atteint pas la distance voulue, on avance
 
-    analogWrite(PIN_MOTOR_LEFT, 0);
-    analogWrite(PIN_MOTOR_RIGHT, 0);
+    ledcWrite(channelMotorLeft, 0);
+    ledcWrite(channelMotorRight, 0);
 }
 
 void carre (int largeur)
@@ -206,8 +209,8 @@ void trajectoireCirculaire (int rayonTrajectoire, int angle) // Rayon en millim�
     float ratioDeuxArcs = longueurArcInterieur/longueurArcExterieur; // On calcule un ratio de proportionalité dépendant de la longueur des arcs
                                     // Il faudra peut-être changer cette formule pour l'adapter à la courbe du PWM dépendante de notre driver
 
-    analogWrite(PIN_DIR_MOTOR_LEFT, 255);                   // On fait tourner nos roues proportionellement à la longueur des arcs
-    analogWrite(PIN_DIR_MOTOR_RIGHT, 255*ratioDeuxArcs);
+    ledcWrite(channelMotorLeft, 255);                   // On fait tourner nos roues proportionellement à la longueur des arcs
+    ledcWrite(channelMotorRight, 255*ratioDeuxArcs);
 
 
     float longueurParcourueArcExterieur = 0;
@@ -219,8 +222,8 @@ void trajectoireCirculaire (int rayonTrajectoire, int angle) // Rayon en millim�
         longueurParcourueArcInterieur = pi*(rayonRoue/rapportReductionMoteur)*compteurDroite; // Estimation de la longueur déjà parcourue par la roue intérieure
     }
 
-    analogWrite(PIN_DIR_MOTOR_LEFT, 0); // On éteint les moteurs à la fin de la trajectoire
-    analogWrite(PIN_DIR_MOTOR_RIGHT, 0);
+    ledcWrite(channelMotorLeft, 0); // On éteint les moteurs à la fin de la trajectoire
+    ledcWrite(channelMotorRight, 0);
 }
 
 void cercle (int diametre)
@@ -247,13 +250,13 @@ void suiviLigne () // Actuellement la fonction tourne à l'infini
         if (digitalRead(PIN_FLOOR_IR_RIGHT)) valuePWMRight = 0; // Si le robot perçoit la ligne droite, on fait s'arrêter la roue droite
         else valuePWMRight = 255;
 
-        analogWrite(PIN_MOTOR_LEFT, valuePWMLeft);
-        analogWrite(PIN_MOTOR_RIGHT, valuePWMRight);
+        ledcWrite(channelMotorLeft, valuePWMLeft);
+        ledcWrite(channelMotorRight, valuePWMRight);
 
         if (!etatBoutonOnOff) break; // On arrête le programme de suivi de ligne si le bouton on/off est pressé
     }
-    analogWrite(PIN_MOTOR_LEFT, 0); // On oublie pas d'arrêter les moteurs
-    analogWrite(PIN_MOTOR_RIGHT, 0);
+    ledcWrite(channelMotorLeft, 0); // On oublie pas d'arrêter les moteurs
+    ledcWrite(channelMotorRight, 0);
 }
 
 void evitementObstacles ()
@@ -263,24 +266,25 @@ void evitementObstacles ()
 
     while (choix == 2)
     {
-        if (analogRead(PIN_FRONT_IR_LEFT) >700); // Si le capteur détecte un obstacle
+        if (analogRead(PIN_FRONT_IR_LEFT) > 700); // Si le capteur détecte un obstacle
         if (analogRead(PIN_FRONT_IR_RIGHT) > 700);
 
         if (!etatBoutonOnOff) break; // On arrête le programme de d'évitement d'obstacles si le bouton on/off est pressé
     }
-    analogWrite(PIN_MOTOR_LEFT, 0); // On oublie pas d'arrêter les moteurs
-    analogWrite(PIN_MOTOR_RIGHT, 0);
+    ledcWrite(channelMotorLeft, 0); // On oublie pas d'arrêter les moteurs
+    ledcWrite(channelMotorRight, 0);
 }
 
 void color (int redPWM, int greenPWM, int bluePWM) // Set color
 {
-    analogWrite(PIN_LED_RED, redPWM);
-    analogWrite(PIN_LED_GREEN, greenPWM);
-    analogWrite(PIN_LED_BLUE, bluePWM);
+    ledcWrite(channelLedRed, redPWM);
+    ledcWrite(channelLedGreen, greenPWM);
+    ledcWrite(channelLedBlue, bluePWM);
 }
 
 void loop ()
 {
+    Serial.println(choix);
     if (!etatBoutonOnOff) color(0, 0, 0); // Si le robot est éteint, on éteint la DEL RGB
     while (!etatBoutonOnOff); // Si le robot est éteint, on attend
 
@@ -288,81 +292,63 @@ void loop ()
     {
         case 1: // Suivi de ligne, DEL verte
             color(0, 255, 0);
-            if (digitalRead(PIN_BUTTON_VALID))
+            if (digitalRead(validPressed))
             {
+                validPressed = 0;
                 suiviLigne();
                 attendre(500);
-                break;
             }
-            else if (choix != 1)
-            {
-                break;
-            }
+            break;
 
         case 2: // Evitement d'obstacles, DEL rouge
             color(255, 0, 0);
-            if (digitalRead(PIN_BUTTON_VALID))
+            if (digitalRead(validPressed))
             {
+                validPressed = 0;
                 evitementObstacles();
                 attendre(500);
-                break;
             }
-            else if (choix != 2)
-            {
-                break;
-            }
+            break;
 
         case 3: // Ligne droite, DEL blanche
             color(255, 255, 255);
-            if (digitalRead(PIN_BUTTON_VALID))
+            if (digitalRead(validPressed))
             {
+                validPressed = 0;
                 toutDroit(10);
                 attendre(500);
-                break;
             }
-            else if (choix != 3)
-            {
-                break;
-            }
+            break;
 
         case 4: // Carré, DEL jaune
             color(255, 255, 0);
-            if (digitalRead(PIN_BUTTON_VALID))
+            if (digitalRead(validPressed))
             {
+                validPressed = 0;
                 carre(500);
                 attendre(500);
-                break;
             }
-            else if (choix != 4)
-            {
-                break;
-            }
+            break;
 
         case 5: // Triangle, DEL bleue
             color(0, 0, 255);
-            if (digitalRead(PIN_BUTTON_VALID))
+            if (digitalRead(validPressed))
             {
+                validPressed = 0;
                 triangle(500);
                 attendre(500);
-                break;
             }
-            else if (choix != 5)
-            {
-                break;
-            }
+            break;
 
         case 6: // Cercle, DEL violette
             color(238, 130, 238);
-            if (digitalRead(PIN_BUTTON_VALID))
+            if (digitalRead(validPressed))
             {
+                validPressed = 0;
                 cercle(500);
                 attendre(500);
-                break;
             }
-            else if (choix != 6)
-            {
-                break;
-            }
+            break;
 
         default: // N'est pas sensé arriver, affiche la couleur d'erreur (marron)
             color(165, 42, 42);
