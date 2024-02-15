@@ -67,7 +67,7 @@ void setup ()
     pinMode(PIN_BUTTON_VALID, INPUT);
     pinMode(PIN_BUTTON_UP, INPUT);
     pinMode(PIN_BUTTON_DOWN, INPUT);
-    pinMode(PIN_BUTTON_ON_OFF, INPUT);
+    pinMode(PIN_BUTTON_ON_OFF, INPUT_PULLUP   );
 
     // Pins DELs
     pinMode(PIN_LED_RED, OUTPUT);
