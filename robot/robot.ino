@@ -47,6 +47,33 @@ unsigned int choix = 0;
 
 void setup ()
 {
+    // Pins moteurs
+    pinMode(PIN_MOTOR_LEFT, OUTPUT);
+    pinMode(PIN_MOTOR_RIGHT, OUTPUT);
+    pinMode(PIN_DIR_MOTOR_LEFT, OUTPUT);
+    pinMode(PIN_DIR_MOTOR_RIGHT, OUTPUT);
+    pinMode(PIN_INTERRUPT_LEFT, INPUT);
+    pinMode(PIN_INTERRUPT_RIGHT, INPUT);
+
+    // Pins IR terrestres
+    pinMode(PIN_FLOOR_IR_LEFT, INPUT);
+    pinMode(PIN_FLOOR_IR_RIGHT, INPUT);
+
+    // Pins IR frontaux
+    pinMode(PIN_FRONT_IR_LEFT, INPUT);
+    pinMode(PIN_FRONT_IR_RIGHT, INPUT);
+
+    // Pins boutons
+    pinMode(PIN_BUTTON_VALID, INPUT);
+    pinMode(PIN_BUTTON_UP, INPUT);
+    pinMode(PIN_BUTTON_DOWN, INPUT);
+    pinMode(PIN_BUTTON_ON_OFF, INPUT);
+
+    // Pins DELs
+    pinMode(PIN_LED_RED, OUTPUT);
+    pinMode(PIN_LED_GREEN, OUTPUT);
+    pinMode(PIN_LED_BLUE, OUTPUT);
+
     // Setup les PWM du moteur
     ledcSetup(channelMotorLeft, freq, resolution);
     ledcSetup(channelMotorRight, freq, resolution);
