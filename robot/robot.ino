@@ -1,18 +1,18 @@
 // pins moteurs
 const int PIN_MOTOR_LEFT = 16;
 const int PIN_MOTOR_RIGHT = 17;
-const int PIN_DIR_MOTOR_LEFT = 34;
-const int PIN_DIR_MOTOR_RIGHT = 35;
-const int PIN_INTERRUPT_LEFT = 32;
-const int PIN_INTERRUPT_RIGHT = 33;
+const int PIN_DIR_MOTOR_LEFT = 32;
+const int PIN_DIR_MOTOR_RIGHT = 33;
+const int PIN_INTERRUPT_LEFT = 34;
+const int PIN_INTERRUPT_RIGHT = 35;
 
 // pins IR terrestres
 const int PIN_FLOOR_IR_LEFT = 23;
 const int PIN_FLOOR_IR_RIGHT = 22;
 
 //pins IR frontaux
-const int PIN_FRONT_IR_LEFT = 25;
-const int PIN_FRONT_IR_RIGHT = 26;
+const int PIN_BACK_IR = 25;
+const int PIN_FRONT_IR = 26;
 
 // pins boutons
 const int PIN_BUTTON_VALID = 27;
@@ -33,11 +33,14 @@ const int channelMotorRight = 1;
 const int channelLedRed = 2;
 const int channelLedGreen = 3;
 const int channelLedBlue = 4;
+const int channelFrontIr = 5;
+const int channelBackIr = 6;
 
 // constantes globales
 const float rapportReductionMoteur = 52.734;
 const int rayonRoue = 66;
 const double pi = 3.1415926535897932384626433;
+const int filtre = 1800;
 
 // variables globales
 volatile int compteurDroite = 0;
@@ -47,7 +50,7 @@ volatile int choix = 1;
 volatile bool validPressed = 0;
 
 // Anti-Rebonds
-int debounce = 200;
+const int debounce = 200;
 unsigned long debounceValid = millis();
 // unsigned long debounceTriggerDroite = millis();
 // unsigned long debounceTriggerGauche = millis();
@@ -114,13 +117,25 @@ void setup ()
     pinMode(PIN_INTERRUPT_LEFT, INPUT);
     pinMode(PIN_INTERRUPT_RIGHT, INPUT);
 
+    ledcAttachPin(PIN_MOTOR_LEFT, channelMotorLeft);
+    ledcAttachPin(PIN_MOTOR_RIGHT, channelMotorRight);
+
+    ledcSetup(channelMotorLeft, freq, resolution);
+    ledcSetup(channelMotorRight, freq, resolution);
+
     // Pins IR terrestres
     pinMode(PIN_FLOOR_IR_LEFT, INPUT);
     pinMode(PIN_FLOOR_IR_RIGHT, INPUT);
 
     // Pins IR frontaux
-    pinMode(PIN_FRONT_IR_LEFT, INPUT);
-    pinMode(PIN_FRONT_IR_RIGHT, INPUT);
+    // ledcAttachPin(PIN_FRONT_IR, channelFrontIr);
+    // ledcAttachPin(PIN_BACK_IR, channelBackIr);
+
+    // ledcSetup(channelFrontIr, freq, resolution);
+    // ledcSetup(channelBackIr, freq, resolution);
+
+    pinMode(PIN_BACK_IR, INPUT);
+    pinMode(PIN_FRONT_IR, INPUT);
 
     // Pins boutons
     pinMode(PIN_BUTTON_VALID, INPUT_PULLUP);
@@ -140,13 +155,6 @@ void setup ()
     ledcSetup(channelLedRed, freq, resolution);
     ledcSetup(channelLedGreen, freq, resolution);
     ledcSetup(channelLedBlue, freq, resolution);
-
-    ledcAttachPin(PIN_MOTOR_LEFT, channelMotorLeft);
-    ledcAttachPin(PIN_MOTOR_RIGHT, channelMotorRight);
-
-    ledcSetup(channelMotorLeft, freq, resolution);
-    ledcSetup(channelMotorRight, freq, resolution);
-
 
     // Interruptions odomètre
     attachInterrupt(PIN_INTERRUPT_LEFT, triggerOdometreDroite, FALLING);
@@ -273,9 +281,9 @@ void suiviLigne () // Actuellement la fonction tourne à l'infini
 {
     int valuePWMLeft = 255;
     int valuePWMRight = 255;
-    
-    digitalWrite(PIN_DIR_MOTOR_LEFT, LOW);
-    digitalWrite(PIN_DIR_MOTOR_RIGHT, HIGH);
+
+    digitalWrite(PIN_DIR_MOTOR_LEFT, HIGH);
+    digitalWrite(PIN_DIR_MOTOR_RIGHT, LOW);
 
     while (choix == 1)
     {
@@ -301,8 +309,25 @@ void evitementObstacles ()
 
     while (choix == 2)
     {
-        if (analogRead(PIN_FRONT_IR_LEFT) > 700); // Si le capteur détecte un obstacle
-        if (analogRead(PIN_FRONT_IR_RIGHT) > 700);
+        if (analogRead(PIN_BACK_IR) > filtre) // Si le capteur détecte un obstacle
+        {
+            digitalWrite(PIN_DIR_MOTOR_LEFT, HIGH);
+            digitalWrite(PIN_DIR_MOTOR_RIGHT, LOW);
+            ledcWrite(channelMotorLeft, 255);
+            ledcWrite(channelMotorRight, 255);
+        }
+        else if (analogRead(PIN_FRONT_IR) > filtre)
+        {
+            digitalWrite(PIN_DIR_MOTOR_LEFT, LOW);
+            digitalWrite(PIN_DIR_MOTOR_RIGHT, HIGH);
+            ledcWrite(channelMotorLeft, 255);
+            ledcWrite(channelMotorRight, 255);
+        }
+        else
+        {
+            ledcWrite(channelMotorLeft, 0);
+            ledcWrite(channelMotorRight, 0);
+        }
 
         if (!etatBoutonOnOff) break; // On arrête le programme de d'évitement d'obstacles si le bouton on/off est pressé
     }
