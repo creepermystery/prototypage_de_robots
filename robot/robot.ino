@@ -128,12 +128,6 @@ void setup ()
     pinMode(PIN_FLOOR_IR_RIGHT, INPUT);
 
     // Pins IR frontaux
-    // ledcAttachPin(PIN_FRONT_IR, channelFrontIr);
-    // ledcAttachPin(PIN_BACK_IR, channelBackIr);
-
-    // ledcSetup(channelFrontIr, freq, resolution);
-    // ledcSetup(channelBackIr, freq, resolution);
-
     pinMode(PIN_BACK_IR, INPUT);
     pinMode(PIN_FRONT_IR, INPUT);
 
@@ -279,8 +273,8 @@ void attendre (int temps) // Fonction permettant d'attendre pendant un temps exp
 
 void suiviLigne () // Actuellement la fonction tourne à l'infini
 {
-    int valuePWMLeft = 255;
-    int valuePWMRight = 255;
+    int valuePWMLeft = 25;
+    int valuePWMRight = 25;
 
     digitalWrite(PIN_DIR_MOTOR_LEFT, HIGH);
     digitalWrite(PIN_DIR_MOTOR_RIGHT, LOW);
@@ -309,21 +303,29 @@ void evitementObstacles ()
 
     while (choix == 2)
     {
-        if (analogRead(PIN_BACK_IR) > filtre) // Si le capteur détecte un obstacle
+        
+        if (analogRead(PIN_BACK_IR) > filtre && analogRead(PIN_FRONT_IR)) // Si le capteur détecte un obstacle devant et derrière
+        {
+            digitalWrite(PIN_DIR_MOTOR_LEFT, LOW);
+            digitalWrite(PIN_DIR_MOTOR_RIGHT, LOW);
+            ledcWrite(channelMotorLeft, 255);
+            ledcWrite(channelMotorRight, 255);
+        }
+        else if (analogRead(PIN_BACK_IR) > filtre) // Si le capteur détecte un obstacle derrière
         {
             digitalWrite(PIN_DIR_MOTOR_LEFT, HIGH);
             digitalWrite(PIN_DIR_MOTOR_RIGHT, LOW);
             ledcWrite(channelMotorLeft, 255);
             ledcWrite(channelMotorRight, 255);
         }
-        else if (analogRead(PIN_FRONT_IR) > filtre)
+        else if (analogRead(PIN_FRONT_IR) > filtre) // Si le capteur détecte un obstacle devant
         {
             digitalWrite(PIN_DIR_MOTOR_LEFT, LOW);
             digitalWrite(PIN_DIR_MOTOR_RIGHT, HIGH);
             ledcWrite(channelMotorLeft, 255);
             ledcWrite(channelMotorRight, 255);
         }
-        else
+        else // Si rien n'est détecté
         {
             ledcWrite(channelMotorLeft, 0);
             ledcWrite(channelMotorRight, 0);
