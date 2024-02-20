@@ -1,26 +1,26 @@
 // pins moteurs
-const int PIN_MOTOR_LEFT = 16;
-const int PIN_MOTOR_RIGHT = 17;
-const int PIN_DIR_MOTOR_LEFT = 32;
-const int PIN_DIR_MOTOR_RIGHT = 33;
-const int PIN_ODOMETER_A_LEFT = 34;
-const int PIN_ODOMETER_B_LEFT = 18;
-const int PIN_ODOMETER_A_RIGHT = 35;
-const int PIN_ODOMETER_B_RIGHT = 19;
+const int PIN_MOTOR_LEFT = 14;
+const int PIN_MOTOR_RIGHT = 21;
+const int PIN_DIR_MOTOR_LEFT = 27;
+const int PIN_DIR_MOTOR_RIGHT = 19;
+const int PIN_ODOMETER_A_LEFT = 12;
+const int PIN_ODOMETER_B_LEFT = 13;
+const int PIN_ODOMETER_A_RIGHT = 22;
+const int PIN_ODOMETER_B_RIGHT = 23;
 
 // pins IR terrestres
-const int PIN_FLOOR_IR_LEFT = 23;
-const int PIN_FLOOR_IR_RIGHT = 22;
+const int PIN_FLOOR_IR_LEFT = 32;
+const int PIN_FLOOR_IR_RIGHT = 26;
 
 //pins IR frontaux
-const int PIN_BACK_IR = 25;
-const int PIN_FRONT_IR = 26;
+const int PIN_BACK_IR = 33;
+const int PIN_FRONT_IR = 25;
 
 // pins boutons
-const int PIN_BUTTON_VALID = 27;
-const int PIN_BUTTON_UP = 14;
-const int PIN_BUTTON_DOWN = 12;
-const int PIN_BUTTON_ON_OFF = 13;
+const int PIN_BUTTON_VALID = 16;
+const int PIN_BUTTON_UP = 5;
+const int PIN_BUTTON_DOWN = 17;
+const int PIN_BUTTON_ON_OFF = 18;
 
 // pins DELs
 const int PIN_LED_RED = 2;
@@ -324,15 +324,17 @@ void triangle (int largeur)
 
 void trajectoireCirculaire (int rayonTrajectoire, int angle) // Rayon en millimètres et angle en degrès
 {
+    int channelRoueExterieure;
+    int channelRoueInterieure;
     if (angle > 0) // Virage à gauche
     {
-        int channelRoueExterieure = CHANNEL_MOTOR_RIGHT;
-        int channelRoueInterieure = CHANNEL_MOTOR_LEFT;
+        channelRoueExterieure = CHANNEL_MOTOR_RIGHT;
+        channelRoueInterieure = CHANNEL_MOTOR_LEFT;
     }
     else if (angle < 0) // Virage à droite
     {
-        int channelRoueExtxerieure = CHANNEL_MOTOR_LEFT;
-        int channelRoueInterieure = CHANNEL_MOTOR_RIGHT;
+        channelRoueExterieure = CHANNEL_MOTOR_LEFT;
+        channelRoueInterieure = CHANNEL_MOTOR_RIGHT;
     }
     else return; // Si l'angle est égal à 0 on stoppe la fonction
 
