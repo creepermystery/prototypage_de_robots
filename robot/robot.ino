@@ -219,18 +219,43 @@ void tournerGauche (int angle)
 {
     compteurDroite = 0;
     compteurGauche = 0;
+    float angleEstime = 0;
+    int distanceRoueDroite = 0;
+    int distanceRoueGauche = 0;
+    int err = 0;
 
-    ledcWrite(CHANNEL_MOTOR_LEFT, 70);            // On choisit les bonnes direction de rotation des roues et on démarre le virage
-    digitalWrite(PIN_DIR_MOTOR_LEFT, HIGH);
-    ledcWrite(CHANNEL_MOTOR_RIGHT, 70);
-    digitalWrite(PIN_DIR_MOTOR_RIGHT, HIGH);
-
-    while ((compteurDroite + compteurGauche)/2 < 10); // On attend que le virage soit fait
-
-    ledcWrite(CHANNEL_MOTOR_LEFT, 0);             // On remet toutes les sorties à zéro
+    ledcWrite(CHANNEL_MOTOR_LEFT, 70);                // On choisit les bonnes direction de rotation des roues et on démarre le virage
     digitalWrite(PIN_DIR_MOTOR_LEFT, LOW);
+    ledcWrite(CHANNEL_MOTOR_RIGHT, 70);
+    digitalWrite(PIN_DIR_MOTOR_RIGHT, LOW);
+
+    while (angleEstime < angle) // On attend que le virage soit fait
+    {
+        distanceRoueDroite = 2*PI*RAYON_ROUE * compteurDroite/(CPR_ODOMETRE*RAPPORT_REDUCTION_MOTEUR);
+        distanceRoueGauche = 2*PI*RAYON_ROUE * compteurGauche/(CPR_ODOMETRE*RAPPORT_REDUCTION_MOTEUR);
+        angleEstime = abs(distanceRoueDroite/(ECART_ROUES/2.0) + distanceRoueGauche/(ECART_ROUES/2.0))/2.0;
+
+        err = compteurDroite - compteurGauche;  // On ajuste la rotation selon le décalage des odomètres
+
+        if (err > LIMITE_DECALAGE)
+        {
+            ledcWrite(CHANNEL_MOTOR_LEFT, 70);  // ...Si le moteur droit va plus vite
+            ledcWrite(CHANNEL_MOTOR_RIGHT, 50);
+        }
+        else if (err < -1*LIMITE_DECALAGE)
+        {
+            ledcWrite(CHANNEL_MOTOR_LEFT, 50); // ...Si le moteur gauche va plus vite
+            ledcWrite(CHANNEL_MOTOR_RIGHT, 70);
+        }
+        else
+        {
+            ledcWrite(CHANNEL_MOTOR_LEFT, 70); // ...Si les deux sont synchrones
+            ledcWrite(CHANNEL_MOTOR_RIGHT, 70);
+        }
+    }
+
+    ledcWrite(CHANNEL_MOTOR_LEFT, 0);                 // On remet les sorties à zéro
     ledcWrite(CHANNEL_MOTOR_RIGHT, 0);
-    digitalWrite(PIN_DIR_MOTOR_RIGHT, HIGH);
 }
 
 void toutDroit (int distanceCommandee)
