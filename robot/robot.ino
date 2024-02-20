@@ -38,7 +38,6 @@ const int CHANNEL_LED_GREEN = 3;
 const int CHANNEL_LED_BLUE = 4;
 
 // constantes globales
-<<<<<<< HEAD
 const float RAPPORT_REDUCTION_MOTEUR = 52.734;
 const int CPR_ODOMETRE = 6;
 const int RAYON_ROUE = 33;
@@ -46,14 +45,7 @@ const double PI = 3.1415926535897932384626433;
 const int FILTER = 1800;
 const float ECART_ROUES = 21.5;
 const int LIMITE_DECALAGE = 100;
-=======
-const float rapportReductionMoteur = 52.734;
-const int rayonRoue = 33;
-const double pi = 3.1415926535897932384626433;
-const int filtre = 1800;
-const int odometre = 6;
-const int interval = 1000;
->>>>>>> 1732d40a38dc75ee63d8767d584e1a228d457d69
+const int INTERVAL = 1000;
 
 // variables globales
 volatile int compteurDroite = 0;
@@ -75,7 +67,7 @@ unsigned long debounceOnOff = millis();
 unsigned long previousMillis = 0; 
 unsigned long prevdistanceR = 0;
 unsigned long prevdistanceL = 0;
-double preverror=0;
+double preverror = 0;
 int integrale_error = 0;
 void swapValid ()
 {
@@ -278,7 +270,7 @@ void toutDroit (int distanceCommandee)
 {
   unsigned long currentMillis = millis();
   double Kp=2, Ki=5, Kd=1;
-  
+
   compteurDroite = 0 ;
   compteurGauche = 0;
   
@@ -302,7 +294,7 @@ void toutDroit (int distanceCommandee)
     ledcWrite(channelMotorLeft, 0);
     ledcWrite(channelMotorRight, 0);
   }
-  if (currentMillis - previousMillis > interval){
+  if (currentMillis - previousMillis > INTERVAL){
     previousMillis = currentMillis;
     prevdistanceR = distanceR;
     prevdistanceL = distanceL;
