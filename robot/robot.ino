@@ -1,3 +1,4 @@
+#include <PID_v1.h>
 // pins moteurs
 const int PIN_MOTOR_LEFT = 16;
 const int PIN_MOTOR_RIGHT = 17;
@@ -40,9 +41,11 @@ const int channelBackIr = 6;
 
 // constantes globales
 const float rapportReductionMoteur = 52.734;
-const int rayonRoue = 66;
+const int rayonRoue = 33;
 const double pi = 3.1415926535897932384626433;
 const int filtre = 1800;
+const int odometre = 6;
+const int interval = 1000;
 
 // variables globales
 volatile int compteurDroite = 0;
@@ -50,6 +53,8 @@ volatile int compteurGauche = 0;
 volatile bool etatBoutonOnOff = 0;
 volatile int choix = 1;
 volatile bool validPressed = 0;
+
+
 
 // Anti-Rebonds
 const int debounce = 200;
@@ -59,7 +64,11 @@ unsigned long debounceValid = millis();
 unsigned long debounceIncrementerChoix = millis();
 unsigned long debounceDecrementerChoix = millis();
 unsigned long debounceOnOff = millis();
-
+unsigned long previousMillis = 0; 
+unsigned long prevdistanceR = 0;
+unsigned long prevdistanceL = 0;
+double preverror=0;
+int integrale_error = 0;
 void swapValid ()
 {
     if (millis() - debounceValid > debounce)
@@ -209,15 +218,42 @@ void tournerGauche (int angle)
 
 void toutDroit (int distanceCommandee)
 {
-    float distanceEstimee = 0.0;
-
+  unsigned long currentMillis = millis();
+  double Kp=2, Ki=5, Kd=1;
+  ;
+  compteurDroite = 0 ;
+  compteurGauche = 0;
+  
+  int distanceR = (abs(compteurDroite)/(odometre*rapportReductionMoteur) )*2*pi*rayonRoue*0.001;
+  int distanceL = (abs(compteurGauche)/(odometre*rapportReductionMoteur) )*2*pi*rayonRoue*0.001;
+  digitalWrite(PIN_DIR_MOTOR_LEFT, HIGH);
+  digitalWrite(PIN_DIR_MOTOR_RIGHT, LOW);
+  int vR = distanceR - prevdistanceR ; // distance des moteur en mètre par seconde 
+  int vL = distanceL - prevdistanceL;
+  int error =vR-vL;
+  int power = -(Kp*error + Ki*integrale_error + Kd*(error-preverror));
+  
+  
+ 
+  if (distanceR < distanceCommandee && distanceL < distanceCommandee){
+    
+    
     ledcWrite(channelMotorLeft, 255);
-    ledcWrite(channelMotorRight, 255);
-
-    while (distanceEstimee < distanceCommandee) distanceEstimee = pi*(rayonRoue/rapportReductionMoteur)*(compteurDroite+compteurGauche); // Tant que la distance estimée n'atteint pas la distance voulue, on avance
-
+    ledcWrite(channelMotorRight,power);
+  }else{
     ledcWrite(channelMotorLeft, 0);
     ledcWrite(channelMotorRight, 0);
+  }
+  if (currentMillis - previousMillis > interval){
+    previousMillis = currentMillis;
+    prevdistanceR = distanceR;
+    prevdistanceL = distanceL;
+    preverror= error;
+    integrale_error =+ error; 
+  }
+
+  
+
 }
 
 void carre (int largeur)
