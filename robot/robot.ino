@@ -1,4 +1,3 @@
-#include <PID_v1.h>
 // pins moteurs
 const int PIN_MOTOR_LEFT = 16;
 const int PIN_MOTOR_RIGHT = 17;
@@ -41,7 +40,6 @@ const int CHANNEL_LED_BLUE = 4;
 const float RAPPORT_REDUCTION_MOTEUR = 52.734;
 const int CPR_ODOMETRE = 6;
 const int RAYON_ROUE = 33;
-const double PI = 3.1415926535897932384626433;
 const int FILTER = 1800;
 const float ECART_ROUES = 21.5;
 const int LIMITE_DECALAGE = 100;
@@ -53,8 +51,10 @@ volatile int compteurGauche = 0;
 volatile bool etatBoutonOnOff = 0;
 volatile int choix = 1;
 volatile bool validPressed = 0;
-
-
+unsigned long prevdistanceR = 0;
+unsigned long prevdistanceL = 0;
+double preverror = 0;
+int integrale_error = 0;
 
 // Anti-Rebonds
 const int debounce = 200;
@@ -65,10 +65,7 @@ unsigned long debounceIncrementerChoix = millis();
 unsigned long debounceDecrementerChoix = millis();
 unsigned long debounceOnOff = millis();
 unsigned long previousMillis = 0; 
-unsigned long prevdistanceR = 0;
-unsigned long prevdistanceL = 0;
-double preverror = 0;
-int integrale_error = 0;
+
 void swapValid ()
 {
     if (millis() - debounceValid > debounce)
@@ -274,27 +271,31 @@ void toutDroit (int distanceCommandee)
   compteurDroite = 0 ;
   compteurGauche = 0;
   
-  int distanceR = (abs(compteurDroite)/(odometre*rapportReductionMoteur) )*2*pi*rayonRoue*0.001;
-  int distanceL = (abs(compteurGauche)/(odometre*rapportReductionMoteur) )*2*pi*rayonRoue*0.001;
+  int distanceR = (abs(compteurDroite)/(CPR_ODOMETRE*RAPPORT_REDUCTION_MOTEUR))*2*PI*RAYON_ROUE*0.001;
+  int distanceL = (abs(compteurGauche)/(CPR_ODOMETRE*RAPPORT_REDUCTION_MOTEUR))*2*PI*RAYON_ROUE*0.001;
+
   digitalWrite(PIN_DIR_MOTOR_LEFT, HIGH);
   digitalWrite(PIN_DIR_MOTOR_RIGHT, LOW);
+
   int vR = distanceR - prevdistanceR ; // distance des moteur en mètre par seconde 
   int vL = distanceL - prevdistanceL;
   int error =vR-vL;
   int power = -(Kp*error + Ki*integrale_error + Kd*(error-preverror));
   
-  
- 
-  if (distanceR < distanceCommandee && distanceL < distanceCommandee){
+  if (distanceR < distanceCommandee && distanceL < distanceCommandee)
+  {
     
-    
-    ledcWrite(channelMotorLeft, 255);
-    ledcWrite(channelMotorRight,power);
-  }else{
-    ledcWrite(channelMotorLeft, 0);
-    ledcWrite(channelMotorRight, 0);
+    ledcWrite(CHANNEL_MOTOR_LEFT, 255);
+    ledcWrite(CHANNEL_MOTOR_RIGHT,power);
   }
-  if (currentMillis - previousMillis > INTERVAL){
+  else
+  {
+    ledcWrite(CHANNEL_MOTOR_LEFT, 0);
+    ledcWrite(CHANNEL_MOTOR_RIGHT, 0);
+  }
+
+  if (currentMillis - previousMillis > INTERVAL)
+  {
     previousMillis = currentMillis;
     prevdistanceR = distanceR;
     prevdistanceL = distanceL;
