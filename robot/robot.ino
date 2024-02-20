@@ -28,21 +28,22 @@ const int PIN_LED_GREEN = 4;
 const int PIN_LED_BLUE = 15;
 
 // paramètres PWM
-const int freq = 490;
-const int resolution = 8; // 8 bits de résolution (de 0 à 255)
-const int channelMotorLeft = 0;
-const int channelMotorRight = 1;
-const int channelLedRed = 2;
-const int channelLedGreen = 3;
-const int channelLedBlue = 4;
-const int channelFrontIr = 5;
-const int channelBackIr = 6;
+const int FREQ = 490;
+const int RESOLUTION = 8; // 8 bits de résolution (de 0 à 255)
+const int CHANNEL_MOTOR_LEFT = 0;
+const int CHANNEL_MOTOR_RIGHT = 1;
+const int CHANNEL_LED_RED = 2;
+const int CHANNEL_LED_GREEN = 3;
+const int CHANNEL_LED_BLUE = 4;
 
 // constantes globales
-const float rapportReductionMoteur = 52.734;
-const int rayonRoue = 66;
-const double pi = 3.1415926535897932384626433;
-const int filtre = 1800;
+const float RAPPORT_REDUCTION_MOTEUR = 52.734;
+const int CPR_ODOMETRE = 6;
+const int RAYON_ROUE = 33;
+const double PI = 3.1415926535897932384626433;
+const int FILTER = 1800;
+const float ECART_ROUES = 21.5;
+const int LIMITE_DECALAGE = 100;
 
 // variables globales
 volatile int compteurDroite = 0;
@@ -123,11 +124,11 @@ void setup ()
     pinMode(PIN_ODOMETER_B_LEFT, INPUT_PULLUP);
     pinMode(PIN_ODOMETER_B_RIGHT, INPUT_PULLUP);
 
-    ledcAttachPin(PIN_MOTOR_LEFT, channelMotorLeft);
-    ledcAttachPin(PIN_MOTOR_RIGHT, channelMotorRight);
+    ledcAttachPin(PIN_MOTOR_LEFT, CHANNEL_MOTOR_LEFT);
+    ledcAttachPin(PIN_MOTOR_RIGHT, CHANNEL_MOTOR_RIGHT);
 
-    ledcSetup(channelMotorLeft, freq, resolution);
-    ledcSetup(channelMotorRight, freq, resolution);
+    ledcSetup(CHANNEL_MOTOR_LEFT, FREQ, RESOLUTION);
+    ledcSetup(CHANNEL_MOTOR_RIGHT, FREQ, RESOLUTION);
 
     // Pins IR terrestres
     pinMode(PIN_FLOOR_IR_LEFT, INPUT);
@@ -148,13 +149,13 @@ void setup ()
     pinMode(PIN_LED_GREEN, OUTPUT);
     pinMode(PIN_LED_BLUE, OUTPUT);
 
-    ledcAttachPin(PIN_LED_RED, channelLedRed);
-    ledcAttachPin(PIN_LED_GREEN, channelLedGreen);
-    ledcAttachPin(PIN_LED_BLUE, channelLedBlue);
+    ledcAttachPin(PIN_LED_RED, CHANNEL_LED_RED);
+    ledcAttachPin(PIN_LED_GREEN, CHANNEL_LED_GREEN);
+    ledcAttachPin(PIN_LED_BLUE, CHANNEL_LED_BLUE);
 
-    ledcSetup(channelLedRed, freq, resolution);
-    ledcSetup(channelLedGreen, freq, resolution);
-    ledcSetup(channelLedBlue, freq, resolution);
+    ledcSetup(CHANNEL_LED_RED, FREQ, RESOLUTION);
+    ledcSetup(CHANNEL_LED_GREEN, FREQ, RESOLUTION);
+    ledcSetup(CHANNEL_LED_BLUE, FREQ, RESOLUTION);
 
     // Interruptions odomètre
     attachInterrupt(PIN_INTERRUPT_LEFT, triggerOdometreDroite, FALLING);
@@ -175,18 +176,43 @@ void tournerDroite (int angle)
 {
     compteurDroite = 0;
     compteurGauche = 0;
-  
-    ledcWrite(channelMotorLeft, 70);                // On choisit les bonnes direction de rotation des roues et on démarre le virage
+    float angleEstime = 0;
+    int distanceRoueDroite = 0;
+    int distanceRoueGauche = 0;
+    int err = 0;
+
+    ledcWrite(CHANNEL_MOTOR_LEFT, 70);                // On choisit les bonnes direction de rotation des roues et on démarre le virage
     digitalWrite(PIN_DIR_MOTOR_LEFT, LOW);
-    ledcWrite(channelMotorRight, 70);
+    ledcWrite(CHANNEL_MOTOR_RIGHT, 70);
     digitalWrite(PIN_DIR_MOTOR_RIGHT, LOW);
 
-    while ((compteurDroite + compteurGauche)/2 < 10); // On attend que le virage soit fait
+    while (angleEstime < angle) // On attend que le virage soit fait
+    {
+        distanceRoueDroite = 2*PI*RAYON_ROUE * compteurDroite/(CPR_ODOMETRE*RAPPORT_REDUCTION_MOTEUR);
+        distanceRoueGauche = 2*PI*RAYON_ROUE * compteurGauche/(CPR_ODOMETRE*RAPPORT_REDUCTION_MOTEUR);
+        angleEstime = abs(distanceRoueDroite/(ECART_ROUES/2.0) + distanceRoueGauche/(ECART_ROUES/2.0))/2.0;
 
-    ledcWrite(channelMotorLeft, 0);                 // On remet toutes les sorties à zéro
-    digitalWrite(PIN_DIR_MOTOR_LEFT, HIGH);
-    ledcWrite(channelMotorRight, 0);
-    digitalWrite(PIN_DIR_MOTOR_RIGHT, LOW);
+        err = compteurDroite - compteurGauche;  // On ajuste la rotation selon le décalage des odomètres
+
+        if (err > LIMITE_DECALAGE)
+        {
+            ledcWrite(CHANNEL_MOTOR_LEFT, 70);  // ...Si le moteur droit va plus vite
+            ledcWrite(CHANNEL_MOTOR_RIGHT, 50);
+        }
+        else if (err < -1*LIMITE_DECALAGE)
+        {
+            ledcWrite(CHANNEL_MOTOR_LEFT, 50); // ...Si le moteur gauche va plus vite
+            ledcWrite(CHANNEL_MOTOR_RIGHT, 70);
+        }
+        else
+        {
+            ledcWrite(CHANNEL_MOTOR_LEFT, 70); // ...Si les deux sont synchrones
+            ledcWrite(CHANNEL_MOTOR_RIGHT, 70);
+        }
+    }
+
+    ledcWrite(CHANNEL_MOTOR_LEFT, 0);                 // On remet les sorties à zéro
+    ledcWrite(CHANNEL_MOTOR_RIGHT, 0);
 }
 
 void tournerGauche (int angle)
@@ -194,16 +220,16 @@ void tournerGauche (int angle)
     compteurDroite = 0;
     compteurGauche = 0;
 
-    ledcWrite(channelMotorLeft, 70);            // On choisit les bonnes direction de rotation des roues et on démarre le virage
+    ledcWrite(CHANNEL_MOTOR_LEFT, 70);            // On choisit les bonnes direction de rotation des roues et on démarre le virage
     digitalWrite(PIN_DIR_MOTOR_LEFT, HIGH);
-    ledcWrite(channelMotorRight, 70);
+    ledcWrite(CHANNEL_MOTOR_RIGHT, 70);
     digitalWrite(PIN_DIR_MOTOR_RIGHT, HIGH);
 
     while ((compteurDroite + compteurGauche)/2 < 10); // On attend que le virage soit fait
 
-    ledcWrite(channelMotorLeft, 0);             // On remet toutes les sorties à zéro
+    ledcWrite(CHANNEL_MOTOR_LEFT, 0);             // On remet toutes les sorties à zéro
     digitalWrite(PIN_DIR_MOTOR_LEFT, LOW);
-    ledcWrite(channelMotorRight, 0);
+    ledcWrite(CHANNEL_MOTOR_RIGHT, 0);
     digitalWrite(PIN_DIR_MOTOR_RIGHT, HIGH);
 }
 
@@ -211,13 +237,13 @@ void toutDroit (int distanceCommandee)
 {
     float distanceEstimee = 0.0;
 
-    ledcWrite(channelMotorLeft, 255);
-    ledcWrite(channelMotorRight, 255);
+    ledcWrite(CHANNEL_MOTOR_LEFT, 255);
+    ledcWrite(CHANNEL_MOTOR_RIGHT, 255);
 
-    while (distanceEstimee < distanceCommandee) distanceEstimee = pi*(rayonRoue/rapportReductionMoteur)*(compteurDroite+compteurGauche); // Tant que la distance estimée n'atteint pas la distance voulue, on avance
+    while (distanceEstimee < distanceCommandee) distanceEstimee = PI*(RAYON_ROUE/RAPPORT_REDUCTION_MOTEUR)*(compteurDroite+compteurGauche); // Tant que la distance estimée n'atteint pas la distance voulue, on avance
 
-    ledcWrite(channelMotorLeft, 0);
-    ledcWrite(channelMotorRight, 0);
+    ledcWrite(CHANNEL_MOTOR_LEFT, 0);
+    ledcWrite(CHANNEL_MOTOR_RIGHT, 0);
 }
 
 void carre (int largeur)
@@ -243,14 +269,14 @@ void trajectoireCirculaire (int rayonTrajectoire, int angle) // Rayon en millim�
     int rayonCercleExterieur = rayonTrajectoire + 100; // Rayon du cercle parcouru par la roue extérieure
     int rayonCercleInterieur = rayonTrajectoire - 100; // Rayon du cercle parcouru par la roue intérieure
 
-    float longueurArcExterieur = rayonCercleExterieur*(pi/180)*angle; // Longueur de l'arc de la roue extérieure
-    float longueurArcInterieur = rayonCercleInterieur*(pi/180)*angle; // Longueur de l'arc de la roue intérieure
+    float longueurArcExterieur = rayonCercleExterieur*(PI/180)*angle; // Longueur de l'arc de la roue extérieure
+    float longueurArcInterieur = rayonCercleInterieur*(PI/180)*angle; // Longueur de l'arc de la roue intérieure
 
     float ratioDeuxArcs = longueurArcInterieur/longueurArcExterieur; // On calcule un ratio de proportionalité dépendant de la longueur des arcs
                                     // Il faudra peut-être changer cette formule pour l'adapter à la courbe du PWM dépendante de notre driver
 
-    ledcWrite(channelMotorLeft, 255);                   // On fait tourner nos roues proportionellement à la longueur des arcs
-    ledcWrite(channelMotorRight, 255*ratioDeuxArcs);
+    ledcWrite(CHANNEL_MOTOR_LEFT, 255);                   // On fait tourner nos roues proportionellement à la longueur des arcs
+    ledcWrite(CHANNEL_MOTOR_RIGHT, 255*ratioDeuxArcs);
 
 
     float longueurParcourueArcExterieur = 0;
@@ -258,12 +284,12 @@ void trajectoireCirculaire (int rayonTrajectoire, int angle) // Rayon en millim�
     
     while (longueurParcourueArcExterieur < longueurArcExterieur && longueurParcourueArcInterieur < longueurArcInterieur) // Tant que les arcs ne sont pas complets on continue d'avancer
     {
-        longueurParcourueArcExterieur = pi*(rayonRoue/rapportReductionMoteur)*compteurGauche; // Estimation de la longueur déjà parcourue par la roue extérieure
-        longueurParcourueArcInterieur = pi*(rayonRoue/rapportReductionMoteur)*compteurDroite; // Estimation de la longueur déjà parcourue par la roue intérieure
+        longueurParcourueArcExterieur = PI*(RAYON_ROUE/RAPPORT_REDUCTION_MOTEUR)*compteurGauche; // Estimation de la longueur déjà parcourue par la roue extérieure
+        longueurParcourueArcInterieur = PI*(RAYON_ROUE/RAPPORT_REDUCTION_MOTEUR)*compteurDroite; // Estimation de la longueur déjà parcourue par la roue intérieure
     }
 
-    ledcWrite(channelMotorLeft, 0); // On éteint les moteurs à la fin de la trajectoire
-    ledcWrite(channelMotorRight, 0);
+    ledcWrite(CHANNEL_MOTOR_LEFT, 0); // On éteint les moteurs à la fin de la trajectoire
+    ledcWrite(CHANNEL_MOTOR_RIGHT, 0);
 }
 
 void cercle (int diametre)
@@ -293,13 +319,13 @@ void suiviLigne () // Actuellement la fonction tourne à l'infini
         if (digitalRead(PIN_FLOOR_IR_RIGHT)) valuePWMRight = 0; // Si le robot perçoit la ligne droite, on fait s'arrêter la roue droite
         else valuePWMRight = 255;
 
-        ledcWrite(channelMotorLeft, valuePWMLeft);
-        ledcWrite(channelMotorRight, valuePWMRight);
+        ledcWrite(CHANNEL_MOTOR_LEFT, valuePWMLeft);
+        ledcWrite(CHANNEL_MOTOR_RIGHT, valuePWMRight);
 
         if (!etatBoutonOnOff) break; // On arrête le programme de suivi de ligne si le bouton on/off est pressé
     }
-    ledcWrite(channelMotorLeft, 0); // On oublie pas d'arrêter les moteurs
-    ledcWrite(channelMotorRight, 0);
+    ledcWrite(CHANNEL_MOTOR_LEFT, 0); // On oublie pas d'arrêter les moteurs
+    ledcWrite(CHANNEL_MOTOR_RIGHT, 0);
 }
 
 void evitementObstacles ()
@@ -310,44 +336,44 @@ void evitementObstacles ()
     while (choix == 2)
     {
         
-        if (analogRead(PIN_BACK_IR) > filtre && analogRead(PIN_FRONT_IR)) // Si le capteur détecte un obstacle devant et derrière
+        if (analogRead(PIN_BACK_IR) > FILTER && analogRead(PIN_FRONT_IR)) // Si le capteur détecte un obstacle devant et derrière
         {
             digitalWrite(PIN_DIR_MOTOR_LEFT, LOW);
             digitalWrite(PIN_DIR_MOTOR_RIGHT, LOW);
-            ledcWrite(channelMotorLeft, 255);
-            ledcWrite(channelMotorRight, 255);
+            ledcWrite(CHANNEL_MOTOR_LEFT, 255);
+            ledcWrite(CHANNEL_MOTOR_RIGHT, 255);
         }
-        else if (analogRead(PIN_BACK_IR) > filtre) // Si le capteur détecte un obstacle derrière
+        else if (analogRead(PIN_BACK_IR) > FILTER) // Si le capteur détecte un obstacle derrière
         {
             digitalWrite(PIN_DIR_MOTOR_LEFT, HIGH);
             digitalWrite(PIN_DIR_MOTOR_RIGHT, LOW);
-            ledcWrite(channelMotorLeft, 255);
-            ledcWrite(channelMotorRight, 255);
+            ledcWrite(CHANNEL_MOTOR_LEFT, 255);
+            ledcWrite(CHANNEL_MOTOR_RIGHT, 255);
         }
-        else if (analogRead(PIN_FRONT_IR) > filtre) // Si le capteur détecte un obstacle devant
+        else if (analogRead(PIN_FRONT_IR) > FILTER) // Si le capteur détecte un obstacle devant
         {
             digitalWrite(PIN_DIR_MOTOR_LEFT, LOW);
             digitalWrite(PIN_DIR_MOTOR_RIGHT, HIGH);
-            ledcWrite(channelMotorLeft, 255);
-            ledcWrite(channelMotorRight, 255);
+            ledcWrite(CHANNEL_MOTOR_LEFT, 255);
+            ledcWrite(CHANNEL_MOTOR_RIGHT, 255);
         }
         else // Si rien n'est détecté
         {
-            ledcWrite(channelMotorLeft, 0);
-            ledcWrite(channelMotorRight, 0);
+            ledcWrite(CHANNEL_MOTOR_LEFT, 0);
+            ledcWrite(CHANNEL_MOTOR_RIGHT, 0);
         }
 
         if (!etatBoutonOnOff) break; // On arrête le programme de d'évitement d'obstacles si le bouton on/off est pressé
     }
-    ledcWrite(channelMotorLeft, 0); // On oublie pas d'arrêter les moteurs
-    ledcWrite(channelMotorRight, 0);
+    ledcWrite(CHANNEL_MOTOR_LEFT, 0); // On oublie pas d'arrêter les moteurs
+    ledcWrite(CHANNEL_MOTOR_RIGHT, 0);
 }
 
 void color (int redPWM, int greenPWM, int bluePWM) // Set color
 {
-    ledcWrite(channelLedRed, redPWM);
-    ledcWrite(channelLedGreen, greenPWM);
-    ledcWrite(channelLedBlue, bluePWM);
+    ledcWrite(CHANNEL_LED_RED, redPWM);
+    ledcWrite(CHANNEL_LED_GREEN, greenPWM);
+    ledcWrite(CHANNEL_LED_BLUE, bluePWM);
 }
 
 void loop ()
