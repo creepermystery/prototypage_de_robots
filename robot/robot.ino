@@ -324,28 +324,58 @@ void triangle (int largeur)
 
 void trajectoireCirculaire (int rayonTrajectoire, int angle) // Rayon en millimètres et angle en degrès
 {
+    if (angle > 0) // Virage à gauche
+    {
+        int channelRoueExterieure = CHANNEL_MOTOR_RIGHT;
+        int channelRoueIntérieure = CHANNEL_MOTOR_LEFT;
+    }
+    else if (angle < 0) // Virage à droite
+    {
+        int channelRoueExterieure = CHANNEL_MOTOR_LEFT;
+        int channelRoueIntérieure = CHANNEL_MOTOR_RIGHT;
+    }
+    else return; // Si l'angle est égal à 0 on stoppe la fonction
+
     int rayonCercleExterieur = rayonTrajectoire + RAYON_ROUE/2.0; // Rayon du cercle parcouru par chaque roue
     int rayonCercleInterieur = rayonTrajectoire - RAYON_ROUE/2.0;
 
-    float longueurArcExterieur = rayonCercleExterieur*(PI/180)*angle; // Longueur de l'arc parcouru par chaque roue
-    float longueurArcInterieur = rayonCercleInterieur*(PI/180)*angle;
+    float longueurArcExterieur = rayonCercleExterieur * (PI/180) * angle; // Longueur de l'arc parcouru par chaque roue
+    float longueurArcInterieur = rayonCercleInterieur * (PI/180) * angle;
+
+    float rapportDeuxArcs = longueurArcInterieur/longueurArcExterieur;
 
     float nombreToursRoueInterieure = longueurArcInterieur/(RAYON_ROUE*2*PI) // Nombre de tours que chaque roue doit effectuer
     float nombreToursRoueExterieure = longueurArcExterieur/(RAYON_ROUE*2*PI) 
 
     digitalWrite(PIN_DIR_MOTOR_LEFT, HIGH); // Les deux moteurs tournent vers l'avant
     digitalWrite(PIN_DIR_MOTOR_RIGHT, LOW);
-    ledcWrite(CHANNEL_MOTOR_LEFT, 255); // On fait tourner nos roues proportionellement à la longueur des arcs
-    ledcWrite(CHANNEL_MOTOR_RIGHT, 255*ratioDeuxArcs);
 
+    ledcWrite(channelRoueExterieure, 255);
+    ledcWrite(channelRoueIntérieure, 255*rapportDeuxArcs);
 
     float longueurParcourueArcExterieur = 0;
     float longueurParcourueArcInterieur = 0;
     
     while (longueurParcourueArcExterieur < longueurArcExterieur && longueurParcourueArcInterieur < longueurArcInterieur) // Tant que les arcs ne sont pas complets on continue d'avancer
     {
-        longueurParcourueArcExterieur = PI*(RAYON_ROUE/RAPPORT_REDUCTION_MOTEUR)*compteurGauche; // Estimation de la longueur déjà parcourue par la roue extérieure
-        longueurParcourueArcInterieur = PI*(RAYON_ROUE/RAPPORT_REDUCTION_MOTEUR)*compteurDroite; // Estimation de la longueur déjà parcourue par la roue intérieure
+        longueurParcourueArcExterieur = 2*PI*(RAYON_ROUE/(RAPPORT_REDUCTION_MOTEUR*CPR_ODOMETRE)) * compteurGauche; // Estimation de la longueur déjà parcourue par chaque roue
+        longueurParcourueArcInterieur = 2*PI*(RAYON_ROUE/(RAPPORT_REDUCTION_MOTEUR*CPR_ODOMETRE)) * compteurDroite;
+
+        if (longueurParcourueArcExterieur*rapportDeuxArcs > longueurParcourueArcInterieur * 1.05) // Si le moteur extérieur se déplace trop vite
+        {
+            ledcWrite(channelRoueExterieure, 255 - 20);
+            ledcWrite(channelRoueIntérieure, 255*rapportDeuxArcs);
+        }
+        else if (longueurParcourueArcExterieur*rapportDeuxArcs < longueurParcourueArcInterieur * 0.95) // Si le moteur intérieur se déplace trop vite
+        {
+            ledcWrite(channelRoueExterieure, 255);
+            ledcWrite(channelRoueIntérieure, 255*rapportDeuxArcs - 20);
+        }
+        else // Si les deux moteurs se déplacent à vitesse synchrone
+        {
+            ledcWrite(channelRoueExterieure, 255);
+            ledcWrite(channelRoueIntérieure, 255*rapportDeuxArcs);
+        }
     }
 
     ledcWrite(CHANNEL_MOTOR_LEFT, 0); // On éteint les moteurs à la fin de la trajectoire
