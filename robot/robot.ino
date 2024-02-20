@@ -233,7 +233,7 @@ void tournerGauche (int angle)
     {
         distanceRoueDroite = 2*PI*RAYON_ROUE * compteurDroite/(CPR_ODOMETRE*RAPPORT_REDUCTION_MOTEUR);
         distanceRoueGauche = 2*PI*RAYON_ROUE * compteurGauche/(CPR_ODOMETRE*RAPPORT_REDUCTION_MOTEUR);
-        angleEstime = abs(distanceRoueDroite/(ECART_ROUES/2.0) + distanceRoueGauche/(ECART_ROUES/2.0))/2.0;
+        angleEstime = (abs(distanceRoueDroite/(ECART_ROUES/2.0) + distanceRoueGauche/(ECART_ROUES/2.0))/2.0)*180/PI;
 
         err = compteurDroite - compteurGauche;  // On ajuste la rotation selon le décalage des odomètres
 
