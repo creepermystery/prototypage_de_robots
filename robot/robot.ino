@@ -327,12 +327,12 @@ void trajectoireCirculaire (int rayonTrajectoire, int angle) // Rayon en millim�
     if (angle > 0) // Virage à gauche
     {
         int channelRoueExterieure = CHANNEL_MOTOR_RIGHT;
-        int channelRoueIntérieure = CHANNEL_MOTOR_LEFT;
+        int channelRoueInterieure = CHANNEL_MOTOR_LEFT;
     }
     else if (angle < 0) // Virage à droite
     {
-        int channelRoueExterieure = CHANNEL_MOTOR_LEFT;
-        int channelRoueIntérieure = CHANNEL_MOTOR_RIGHT;
+        int channelRoueExtxerieure = CHANNEL_MOTOR_LEFT;
+        int channelRoueInterieure = CHANNEL_MOTOR_RIGHT;
     }
     else return; // Si l'angle est égal à 0 on stoppe la fonction
 
@@ -344,14 +344,14 @@ void trajectoireCirculaire (int rayonTrajectoire, int angle) // Rayon en millim�
 
     float rapportDeuxArcs = longueurArcInterieur/longueurArcExterieur;
 
-    float nombreToursRoueInterieure = longueurArcInterieur/(RAYON_ROUE*2*PI) // Nombre de tours que chaque roue doit effectuer
-    float nombreToursRoueExterieure = longueurArcExterieur/(RAYON_ROUE*2*PI) 
+    float nombreToursRoueInterieure = longueurArcInterieur/(RAYON_ROUE*2*PI); // Nombre de tours que chaque roue doit effectuer
+    float nombreToursRoueExterieure = longueurArcExterieur/(RAYON_ROUE*2*PI); 
 
     digitalWrite(PIN_DIR_MOTOR_LEFT, HIGH); // Les deux moteurs tournent vers l'avant
     digitalWrite(PIN_DIR_MOTOR_RIGHT, LOW);
 
     ledcWrite(channelRoueExterieure, 255);
-    ledcWrite(channelRoueIntérieure, 255*rapportDeuxArcs);
+    ledcWrite(channelRoueInterieure, 255*rapportDeuxArcs);
 
     float longueurParcourueArcExterieur = 0;
     float longueurParcourueArcInterieur = 0;
@@ -364,17 +364,17 @@ void trajectoireCirculaire (int rayonTrajectoire, int angle) // Rayon en millim�
         if (longueurParcourueArcExterieur*rapportDeuxArcs > longueurParcourueArcInterieur * 1.05) // Si le moteur extérieur se déplace trop vite
         {
             ledcWrite(channelRoueExterieure, 255 - 20);
-            ledcWrite(channelRoueIntérieure, 255*rapportDeuxArcs);
+            ledcWrite(channelRoueInterieure, 255*rapportDeuxArcs);
         }
         else if (longueurParcourueArcExterieur*rapportDeuxArcs < longueurParcourueArcInterieur * 0.95) // Si le moteur intérieur se déplace trop vite
         {
             ledcWrite(channelRoueExterieure, 255);
-            ledcWrite(channelRoueIntérieure, 255*rapportDeuxArcs - 20);
+            ledcWrite(channelRoueInterieure, 255*rapportDeuxArcs - 20);
         }
         else // Si les deux moteurs se déplacent à vitesse synchrone
         {
             ledcWrite(channelRoueExterieure, 255);
-            ledcWrite(channelRoueIntérieure, 255*rapportDeuxArcs);
+            ledcWrite(channelRoueInterieure, 255*rapportDeuxArcs);
         }
     }
 
