@@ -279,14 +279,14 @@ void toutDroit (int distanceCommandee)
 
   int vR = distanceR - prevdistanceR ; // distance des moteur en mètre par seconde 
   int vL = distanceL - prevdistanceL;
-  int error =vR-vL;
-  int power = -(Kp*error + Ki*integrale_error + Kd*(error-preverror));
+  int error = vR - vL;
+  int power = -1*(Kp*error + Ki*integrale_error + Kd*(error - preverror));
   
   if (distanceR < distanceCommandee && distanceL < distanceCommandee)
   {
     
     ledcWrite(CHANNEL_MOTOR_LEFT, 255);
-    ledcWrite(CHANNEL_MOTOR_RIGHT,power);
+    ledcWrite(CHANNEL_MOTOR_RIGHT, power);
   }
   else
   {
@@ -299,7 +299,7 @@ void toutDroit (int distanceCommandee)
     previousMillis = currentMillis;
     prevdistanceR = distanceR;
     prevdistanceL = distanceL;
-    preverror= error;
+    preverror = error;
     integrale_error =+ error; 
   }
 }
@@ -324,16 +324,18 @@ void triangle (int largeur)
 
 void trajectoireCirculaire (int rayonTrajectoire, int angle) // Rayon en millimètres et angle en degrès
 {
-    int rayonCercleExterieur = rayonTrajectoire + 100; // Rayon du cercle parcouru par la roue extérieure
-    int rayonCercleInterieur = rayonTrajectoire - 100; // Rayon du cercle parcouru par la roue intérieure
+    int rayonCercleExterieur = rayonTrajectoire + RAYON_ROUE/2.0; // Rayon du cercle parcouru par chaque roue
+    int rayonCercleInterieur = rayonTrajectoire - RAYON_ROUE/2.0;
 
-    float longueurArcExterieur = rayonCercleExterieur*(PI/180)*angle; // Longueur de l'arc de la roue extérieure
-    float longueurArcInterieur = rayonCercleInterieur*(PI/180)*angle; // Longueur de l'arc de la roue intérieure
+    float longueurArcExterieur = rayonCercleExterieur*(PI/180)*angle; // Longueur de l'arc parcouru par chaque roue
+    float longueurArcInterieur = rayonCercleInterieur*(PI/180)*angle;
 
-    float ratioDeuxArcs = longueurArcInterieur/longueurArcExterieur; // On calcule un ratio de proportionalité dépendant de la longueur des arcs
-                                    // Il faudra peut-être changer cette formule pour l'adapter à la courbe du PWM dépendante de notre driver
+    float nombreToursRoueInterieure = longueurArcInterieur/(RAYON_ROUE*2*PI) // Nombre de tours que chaque roue doit effectuer
+    float nombreToursRoueExterieure = longueurArcExterieur/(RAYON_ROUE*2*PI) 
 
-    ledcWrite(CHANNEL_MOTOR_LEFT, 255);                   // On fait tourner nos roues proportionellement à la longueur des arcs
+    digitalWrite(PIN_DIR_MOTOR_LEFT, HIGH); // Les deux moteurs tournent vers l'avant
+    digitalWrite(PIN_DIR_MOTOR_RIGHT, LOW);
+    ledcWrite(CHANNEL_MOTOR_LEFT, 255); // On fait tourner nos roues proportionellement à la longueur des arcs
     ledcWrite(CHANNEL_MOTOR_RIGHT, 255*ratioDeuxArcs);
 
 
