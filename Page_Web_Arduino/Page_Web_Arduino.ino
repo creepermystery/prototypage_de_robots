@@ -1,9 +1,18 @@
+/*********
+  Rui Santos
+  Complete project details at https://randomnerdtutorials.com  
+*********/
 
+// Load Wi-Fi library
 #include <WiFi.h>
 
+// Replace with your network credentials
+//const char* ssid = "Freebox-4A8444";
+//const char* password = "conpernem-alarius*-exaruerat-oblito";
+//const char* ssid = "JUNIA_STUDENTS";
+//const char* password = "813nV3nue@Jun1a";
 const char* ssid = "Freebox-4A8444";
 const char* password = "conpernem-alarius*-exaruerat-oblito";
-
 // Set web server port number to 80
 WiFiServer server(80);
 
@@ -11,11 +20,11 @@ WiFiServer server(80);
 String header;
 
 // Auxiliar variables to store the current output state
-String output26State = "off";
+String output18State = "off";
 String output27State = "off";
 
 // Assign output variables to GPIO pins
-const int output26 = 26;
+const int output18 = 18;
 const int output27 = 27;
 
 // Current time
@@ -28,10 +37,10 @@ const long timeoutTime = 2000;
 void setup() {
   Serial.begin(115200);
   // Initialize the output variables as outputs
-  pinMode(output26, OUTPUT);
+  pinMode(output18, OUTPUT);
   pinMode(output27, OUTPUT);
   // Set outputs to LOW
-  digitalWrite(output26, LOW);
+  digitalWrite(output18, LOW);
   digitalWrite(output27, LOW);
 
   // Connect to Wi-Fi network with SSID and password
@@ -76,14 +85,14 @@ void loop(){
             client.println();
             
             // turns the GPIOs on and off
-            if (header.indexOf("GET /26/on") >= 0) {
-              Serial.println("GPIO 26 on");
-              output26State = "on";
-              digitalWrite(output26, HIGH);
-            } else if (header.indexOf("GET /26/off") >= 0) {
-              Serial.println("GPIO 26 off");
-              output26State = "off";
-              digitalWrite(output26, LOW);
+            if (header.indexOf("GET /18/on") >= 0) {
+              Serial.println("GPIO 18 on");
+              output18State = "on";
+              digitalWrite(output18, HIGH);
+            } else if (header.indexOf("GET /18/off") >= 0) {
+              Serial.println("GPIO 18 off");
+              output18State = "off";
+              digitalWrite(output18, LOW);
             } else if (header.indexOf("GET /27/on") >= 0) {
               Serial.println("GPIO 27 on");
               output27State = "on";
@@ -101,24 +110,41 @@ void loop(){
             // CSS to style the on/off buttons 
             // Feel free to change the background-color and font-size attributes to fit your preferences
             client.println("<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}");
-            client.println(".button { background-color: #4CAF50; border: none; color: white; padding: 16px 40px;");
-            client.println("text-decoration: none; font-size: 30px; margin: 2px; cursor: pointer;}");
-            client.println(".button2 {background-color: #555555;}</style></head>");
+            client.println(".styled {border: 0;line-height: 2.5;padding: 0 20px;font-size: 1rem; text-align: center;");
+            client.println("color: #fff; border-radius: 30px;background-color: #edbef8; }");
+            client.println(".styled:hover {background-color:#e791fa ;}");
+            client.println(".styled:active {box-shadow:inset 2px 2px 3px rgb(0 0 0 / 60%);background-color:#d000ff ;}");
+            client.println("body{background-color: #f6e1f5;margin: 0px;}");
+            client.println(".container{display:flex;align-content: center;}");
+            client.println(".fonction1{width: 800px;align-content: center;}");
+            client.println(".fonction2{width: 500px;align-content: center;}");
+            client.println(".entete{background-color: #e791fa ;color:#fff;} </style></head>");
+            
             
             // Web Page Heading
-            client.println("<body><h1>ESP32 Web Server</h1>");
+            client.println("<body><div class=\"entete\"><h1>Commande du robot mobile</h1></div>");
             
-            // Display current state, and ON/OFF buttons for GPIO 26  
-            client.println("<p>GPIO 26 - State " + output26State + "</p>");
-            // If the output26State is off, it displays the ON button       
-            // Display current state, and ON/OFF buttons for GPIO 27  
-            client.println("<p>GPIO 27 - State " + output27State + "</p>");
-            // If the output27State is off, it displays the ON button       
-            if (output27State=="off") {
-              client.println("<p><a href=\"/27/on\"><button class=\"button\">ON</button></a></p>");
-            } else {
-              client.println("<p><a href=\"/27/off\"><button class=\"button button2\">OFF</button></a></p>");
-            }
+            // Boutton ON/OFF 
+            client.println("<div><p>Bouton ON/OFF </p><input class=\"styled\" type=\"button\" value=\"ON/OFF\" /><br><br> </div>");
+           // fleche haut
+            client.println("<div><p>Fleches pour deplacer le robot </p><input class=\"styled\" type=\"button\" value=\"Avant\" /> </div>");
+            // fleche gauche et droite
+            client.println("<div class = \"container\"><div class=\"fonction1\"><br>");
+            client.println("<input class=\"styled\" type=\"button\" value=\"Gauche\" /></div>");
+            client.println("<div class=\"fonction1\"><br><input class=\"styled\" type=\"button\" value=\"Droite\" /></div></div>");
+            //fleche bas
+            client.println("<div><br><input class=\"styled\" type=\"button\" value=\"Arriere\" /></div>");
+            //Mode de fonctionnements 
+            client.println("<div><br><p>Modes de fonctionnement</p><br></div>");
+            client.println("<div class = \"container\">");
+            client.println("<div class=\"fonction2\"><input class=\"styled\" type=\"button\" value=\"\Trinagle \" /></div> ");
+            client.println("<div class=\"fonction2\"><input class=\"styled\" type=\"button\" value=\"Suivi de ligne\" /></div> ");
+            client.println("<div class=\"fonction2\"><input class=\"styled\" type=\"button\" value=\"Ligne droite\" /></div> <br> </div>");
+            client.println("<div><br></div>");
+            client.println("<div class = \"container\">");
+            client.println("<div class=\"fonction2\"><input class=\"styled\" type=\"button\" value=\"Carre\" /></div> ");
+            client.println("<div class=\"fonction2\"><input class=\"styled\" type=\"button\" value=\"Evitement d'obstacle\" /></div> ");
+            client.println("<div class=\"fonction2\"><input class=\"styled\" type=\"button\" value=\"Cercle\" /></div> <br> </div>");
             client.println("</body></html>");
             
             // The HTTP response ends with another blank line

@@ -7,9 +7,10 @@
 #include <WiFi.h>
 
 // Replace with your network credentials
-const char* ssid = "Freebox-4A8444";
-const char* password = "conpernem-alarius*-exaruerat-oblito";
-
+//const char* ssid = "Freebox-4A8444";
+//const char* password = "conpernem-alarius*-exaruerat-oblito";
+const char* ssid = "JUNIA_STUDENTS";
+const char* password = "813nV3nue@Jun1a";
 // Set web server port number to 80
 WiFiServer server(80);
 
