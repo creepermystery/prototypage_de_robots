@@ -3,9 +3,9 @@ const int PIN_MOTOR_LEFT = 16;
 const int PIN_MOTOR_RIGHT = 17;
 const int PIN_DIR_MOTOR_LEFT = 32;
 const int PIN_DIR_MOTOR_RIGHT = 33;
-const int PIN_INTERRUPT_LEFT = 34;
+const int PIN_ODOMETER_A_LEFT = 34;
 const int PIN_ODOMETER_B_LEFT = 18;
-const int PIN_INTERRUPT_RIGHT = 35;
+const int PIN_ODOMETER_A_RIGHT = 35;
 const int PIN_ODOMETER_B_RIGHT = 19;
 
 // pins IR terrestres
@@ -77,13 +77,13 @@ void swapValid ()
 
 void triggerOdometreDroite () // Fonction de comptage de l'odomètre de droite
 {
-    if (digitalRead(PIN_INTERRUPT_RIGHT) == digitalRead(PIN_ODOMETER_B_RIGHT)) compteurDroite++;
+    if (digitalRead(PIN_ODOMETER_A_RIGHT) == digitalRead(PIN_ODOMETER_B_RIGHT)) compteurDroite++;
     else compteurDroite--;
 }
 
 void triggerOdometreGauche () // Fonction de comptage de l'odomètre de gauche
 {
-    if (digitalRead(PIN_INTERRUPT_LEFT) == digitalRead(PIN_ODOMETER_B_LEFT)) compteurGauche--;
+    if (digitalRead(PIN_ODOMETER_A_LEFT) == digitalRead(PIN_ODOMETER_B_LEFT)) compteurGauche--;
     else compteurGauche++;
 }
 
@@ -124,8 +124,8 @@ void setup ()
     pinMode(PIN_MOTOR_RIGHT, OUTPUT);
     pinMode(PIN_DIR_MOTOR_LEFT, OUTPUT);
     pinMode(PIN_DIR_MOTOR_RIGHT, OUTPUT);
-    pinMode(PIN_INTERRUPT_LEFT, INPUT_PULLUP);
-    pinMode(PIN_INTERRUPT_RIGHT, INPUT_PULLUP);
+    pinMode(PIN_ODOMETER_A_LEFT, INPUT_PULLUP);
+    pinMode(PIN_ODOMETER_A_RIGHT, INPUT_PULLUP);
     pinMode(PIN_ODOMETER_B_LEFT, INPUT_PULLUP);
     pinMode(PIN_ODOMETER_B_RIGHT, INPUT_PULLUP);
 
@@ -163,8 +163,8 @@ void setup ()
     ledcSetup(CHANNEL_LED_BLUE, FREQ, RESOLUTION);
 
     // Interruptions odomètre
-    attachInterrupt(PIN_INTERRUPT_LEFT, triggerOdometreDroite, FALLING);
-    attachInterrupt(PIN_INTERRUPT_RIGHT, triggerOdometreGauche, FALLING);
+    attachInterrupt(PIN_ODOMETER_A_LEFT, triggerOdometreDroite, FALLING);
+    attachInterrupt(PIN_ODOMETER_A_RIGHT, triggerOdometreGauche, FALLING);
 
     // Interruptions boutons choix
     attachInterrupt(PIN_BUTTON_DOWN, decrementerChoix, FALLING);
