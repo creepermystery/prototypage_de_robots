@@ -421,9 +421,6 @@ void suiviLigne () // Actuellement la fonction tourne à l'infini
 
 void evitementObstacles ()
 {
-    int valuePWMLeft = 255;
-    int valuePWMRight = 255;
-
     while (choix == 2)
     {
         
