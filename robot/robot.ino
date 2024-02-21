@@ -1,10 +1,12 @@
-// pins moteurs
-const int PIN_MOTOR_LEFT = 14;
-const int PIN_MOTOR_RIGHT = 21;
+// pins moteurs gauche
 const int PIN_DIR_MOTOR_LEFT = 27;
-const int PIN_DIR_MOTOR_RIGHT = 19;
+const int PIN_MOTOR_LEFT = 14;
 const int PIN_ODOMETER_A_LEFT = 12;
 const int PIN_ODOMETER_B_LEFT = 13;
+
+// pins moteur droite
+const int PIN_DIR_MOTOR_RIGHT = 19;
+const int PIN_MOTOR_RIGHT = 21;
 const int PIN_ODOMETER_A_RIGHT = 22;
 const int PIN_ODOMETER_B_RIGHT = 23;
 
@@ -12,7 +14,7 @@ const int PIN_ODOMETER_B_RIGHT = 23;
 const int PIN_FLOOR_IR_LEFT = 32;
 const int PIN_FLOOR_IR_RIGHT = 26;
 
-//pins IR frontaux
+// pins IR frontaux
 const int PIN_BACK_IR = 33;
 const int PIN_FRONT_IR = 25;
 
@@ -396,8 +398,8 @@ void attendre (int temps) // Fonction permettant d'attendre pendant un temps exp
 
 void suiviLigne () // Actuellement la fonction tourne à l'infini
 {
-    int valuePWMLeft = 25;
-    int valuePWMRight = 25;
+    int valuePWMLeft = 255;
+    int valuePWMRight = 255;
 
     digitalWrite(PIN_DIR_MOTOR_LEFT, HIGH);
     digitalWrite(PIN_DIR_MOTOR_RIGHT, LOW);
