@@ -9,9 +9,10 @@
 // Replace with your network credentials
 //const char* ssid = "Freebox-4A8444";
 //const char* password = "conpernem-alarius*-exaruerat-oblito";
-const char* ssid = "JUNIA_STUDENTS";
-const char* password = "813nV3nue@Jun1a";
-
+//const char* ssid = "JUNIA_STUDENTS";
+//const char* password = "813nV3nue@Jun1a";
+const char* ssid = "JUNIA_LAB";
+const char* password = "813nV3nue@";
 //const char* ssid = "Freebox-4A8444";
 //const char* password = "conpernem-alarius*-exaruerat-oblito";
 // Set web server port number to 80
@@ -21,39 +22,17 @@ WiFiServer server(80);
 String header;
 
 // Auxiliar variables to store the current output state
-String output18State = "off";
-String output27State = "off";
-
-// Assign output variables to GPIO pins
-const int output18 = 18;
-const int output27 = 27;
+String state ="off";
 
 // Current time
 unsigned long currentTime = millis();
 // Previous time
 unsigned long previousTime = 0; 
 // Define timeout time in milliseconds (example: 2000ms = 2s)
-const long timeoutTime = 100000;
-bool state = false;
-void ON_OFF(){
-  if(state){
-     Serial.println("off");
-     state=!state;
-  }else{
-     Serial.println("on");
-     state=!state;
-  }
-
-}
+const long timeoutTime = 2000;
 
 void setup() {
   Serial.begin(115200);
-  // Initialize the output variables as outputs
-  pinMode(output18, OUTPUT);
-  pinMode(output27, OUTPUT);
-  // Set outputs to LOW
-  digitalWrite(output18, LOW);
-  digitalWrite(output27, LOW);
 
   // Connect to Wi-Fi network with SSID and password
   Serial.print("Connecting to ");
@@ -97,11 +76,36 @@ void loop(){
             client.println();
             
             // turns the GPIOs on and off
-            if ("ON_OFF()") {
-              Serial.println("COUBEH");
-              output18State = "on";
-              digitalWrite(output18, HIGH);
-            } 
+              if(header.indexOf("GET /on") >= 0){
+                Serial.println("on");
+
+              }else if (header.indexOf("GET /off") >= 0){
+                Serial.println("off");
+                
+              }else if(header.indexOf("GET /Avant") >= 0){
+                Serial.println("En avant");
+              }else if(header.indexOf("GET /Gauche") >= 0){
+                Serial.println("A gauche");
+              }else if(header.indexOf("GET /Droite") >= 0){
+                Serial.println("A droite");
+              }else if(header.indexOf("GET /Arriere") >= 0){
+                Serial.println("En arrière");
+              }else if(header.indexOf("GET /Triangle") >= 0){
+                Serial.println("Triangle");
+              }else if(header.indexOf("GET /Suivideligne") >= 0){
+                Serial.println("Suivi de ligne");
+              }else if(header.indexOf("GET /Lignedroite") >= 0){
+                Serial.println("Ligne droite");
+              }else if(header.indexOf("GET /Carre") >= 0){
+                Serial.println("Carre");
+              }else if(header.indexOf("GET /Evitementdobstacle") >= 0){
+                Serial.println("Evitement d'obstacle");
+              }else if(header.indexOf("GET /Cercle") >= 0){
+                Serial.println("Cercle");
+              }
+
+              
+        
             // Display the HTML web page
             client.println("<!DOCTYPE html><html>");
             client.println("<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
@@ -124,26 +128,33 @@ void loop(){
             client.println("<body><div class=\"entete\"><h1>Commande du robot mobile</h1></div>");
             
             // Boutton ON/OFF 
-            client.println("<div><p>Bouton ON/OFF </p><input class=\"styled\" type=\"button\" value=\"ON/OFF\" onClick = \"ON_OFF()\" /><br><br> </div>");
+            if (state=="off") {
+              client.println("<div><p>Bouton ON/OFF </p><p><a href=\"/on\"><button class=\"styled\">ON</button></a></p><br><br> </div>");
+              state="on";
+            } else {
+              client.println("<div><p>Bouton ON/OFF </p><p><a href=\"/off\"><button class=\"styled\">OFF</button></a></p><br><br> </div>");
+              state="off";
+            } 
+               
            // fleche haut
-            client.println("<div><p>Fleches pour deplacer le robot </p><input class=\"styled\" type=\"button\" value=\"Avant\" /> </div>");
+            client.println("<div><p>Fleches pour deplacer le robot </p><p><a href=\"/Avant\"><button class=\"styled\">Avant</button></a></p> </div>");
             // fleche gauche et droite
             client.println("<div class = \"container\"><div class=\"fonction1\"><br>");
-            client.println("<input class=\"styled\" type=\"button\" value=\"Gauche\" /></div>");
-            client.println("<div class=\"fonction1\"><br><input class=\"styled\" type=\"button\" value=\"Droite\" /></div></div>");
+            client.println("<p><a href=\"/Gauche\"><button class=\"styled\">Gauche</button></a></p> </div>");
+            client.println("<div class=\"fonction1\"><br><p><a href=\"/Droite\"><button class=\"styled\">Droite</button></a></p></div></div>");
             //fleche bas
-            client.println("<div><br><input class=\"styled\" type=\"button\" value=\"Arriere\" /></div>");
+            client.println("<div><br><p><a href=\"/Arriere\"><button class=\"styled\">Arriere</button></a></p></div>");
             //Mode de fonctionnements 
             client.println("<div><br><p>Modes de fonctionnement</p><br></div>");
             client.println("<div class = \"container\">");
-            client.println("<div class=\"fonction2\"><input class=\"styled\" type=\"button\" value=\"\Trinagle \" /></div> ");
-            client.println("<div class=\"fonction2\"><input class=\"styled\" type=\"button\" value=\"Suivi de ligne\" /></div> ");
-            client.println("<div class=\"fonction2\"><input class=\"styled\" type=\"button\" value=\"Ligne droite\" /></div> <br> </div>");
+            client.println("<div class=\"fonction2\"><p><a href=\"/Triangle\"><button class=\"styled\">Triangle</button></a></p></div> ");
+            client.println("<div class=\"fonction2\"><p><a href=\"/Suivideligne\"><button class=\"styled\">Suivi de ligne</button></a></p></div> ");
+            client.println("<div class=\"fonction2\"><p><a href=\"/Lignedroite\"><button class=\"styled\">Ligne droite</button></a></p></div> <br> </div>");
             client.println("<div><br></div>");
             client.println("<div class = \"container\">");
-            client.println("<div class=\"fonction2\"><input class=\"styled\" type=\"button\" value=\"Carre\" /></div> ");
-            client.println("<div class=\"fonction2\"><input class=\"styled\" type=\"button\" value=\"Evitement d'obstacle\" /></div> ");
-            client.println("<div class=\"fonction2\"><input class=\"styled\" type=\"button\" value=\"Cercle\" /></div> <br> </div>");
+            client.println("<div class=\"fonction2\"><p><a href=\"/Carre\"><button class=\"styled\">Carre</button></a></p></div> ");
+            client.println("<div class=\"fonction2\"><p><a href=\"/Evitementdobstacle\"><button class=\"styled\">Evitement d'obstacle</button></a></p></div> ");
+            client.println("<div class=\"fonction2\"><p><a href=\"/Cercle\"><button class=\"styled\">Cercle</button></a></p></div> <br> </div>");
             client.println("</body></html>");
             
             // The HTTP response ends with another blank line
