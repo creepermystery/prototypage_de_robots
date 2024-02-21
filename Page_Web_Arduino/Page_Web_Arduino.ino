@@ -9,10 +9,11 @@
 // Replace with your network credentials
 //const char* ssid = "Freebox-4A8444";
 //const char* password = "conpernem-alarius*-exaruerat-oblito";
-//const char* ssid = "JUNIA_STUDENTS";
-//const char* password = "813nV3nue@Jun1a";
-const char* ssid = "Freebox-4A8444";
-const char* password = "conpernem-alarius*-exaruerat-oblito";
+const char* ssid = "JUNIA_STUDENTS";
+const char* password = "813nV3nue@Jun1a";
+
+//const char* ssid = "Freebox-4A8444";
+//const char* password = "conpernem-alarius*-exaruerat-oblito";
 // Set web server port number to 80
 WiFiServer server(80);
 
@@ -32,7 +33,18 @@ unsigned long currentTime = millis();
 // Previous time
 unsigned long previousTime = 0; 
 // Define timeout time in milliseconds (example: 2000ms = 2s)
-const long timeoutTime = 2000;
+const long timeoutTime = 100000;
+bool state = false;
+void ON_OFF(){
+  if(state){
+     Serial.println("off");
+     state=!state;
+  }else{
+     Serial.println("on");
+     state=!state;
+  }
+
+}
 
 void setup() {
   Serial.begin(115200);
@@ -85,24 +97,11 @@ void loop(){
             client.println();
             
             // turns the GPIOs on and off
-            if (header.indexOf("GET /18/on") >= 0) {
-              Serial.println("GPIO 18 on");
+            if ("ON_OFF()") {
+              Serial.println("COUBEH");
               output18State = "on";
               digitalWrite(output18, HIGH);
-            } else if (header.indexOf("GET /18/off") >= 0) {
-              Serial.println("GPIO 18 off");
-              output18State = "off";
-              digitalWrite(output18, LOW);
-            } else if (header.indexOf("GET /27/on") >= 0) {
-              Serial.println("GPIO 27 on");
-              output27State = "on";
-              digitalWrite(output27, HIGH);
-            } else if (header.indexOf("GET /27/off") >= 0) {
-              Serial.println("GPIO 27 off");
-              output27State = "off";
-              digitalWrite(output27, LOW);
-            }
-            
+            } 
             // Display the HTML web page
             client.println("<!DOCTYPE html><html>");
             client.println("<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
@@ -125,7 +124,7 @@ void loop(){
             client.println("<body><div class=\"entete\"><h1>Commande du robot mobile</h1></div>");
             
             // Boutton ON/OFF 
-            client.println("<div><p>Bouton ON/OFF </p><input class=\"styled\" type=\"button\" value=\"ON/OFF\" /><br><br> </div>");
+            client.println("<div><p>Bouton ON/OFF </p><input class=\"styled\" type=\"button\" value=\"ON/OFF\" onClick = \"ON_OFF()\" /><br><br> </div>");
            // fleche haut
             client.println("<div><p>Fleches pour deplacer le robot </p><input class=\"styled\" type=\"button\" value=\"Avant\" /> </div>");
             // fleche gauche et droite
