@@ -1,8 +1,3 @@
-/*********
-  Rui Santos
-  Complete project details at https://randomnerdtutorials.com  
-*********/
-
 // Load Wi-Fi library
 #include <WiFi.h>
 
@@ -22,7 +17,7 @@ WiFiServer server(80);
 String header;
 
 // Auxiliar variables to store the current output state
-String state ="off";
+String state = "off";
 
 // Current time
 unsigned long currentTime = millis();

@@ -171,6 +171,12 @@ void setup ()
     attachInterrupt(PIN_BUTTON_VALID, swapValid, FALLING);
 }
 
+void attendre (int temps) // Fonction permettant d'attendre pendant un temps exprimé en millisecondes
+{
+    unsigned long currentTime = millis();
+    while (millis() < currentTime + temps) if (!etatBoutonOnOff) break;
+}
+
 void tournerDroite (int angle) 
 {
     compteurDroite = 0;
@@ -260,7 +266,7 @@ void tournerGauche (int angle)
         if (!etatBoutonOnOff) break;
     }
 
-    ledcWrite(CHANNEL_MOTOR_LEFT, 0);                 // On remet les sorties à zéro
+    ledcWrite(CHANNEL_MOTOR_LEFT, 0); // On remet les sorties à zéro
     ledcWrite(CHANNEL_MOTOR_RIGHT, 0);
 }
 
@@ -304,24 +310,6 @@ void toutDroit (int distanceCommandee)
 
     ledcWrite(CHANNEL_MOTOR_LEFT, 0);
     ledcWrite(CHANNEL_MOTOR_RIGHT, 0);
-}
-
-void carre (int largeur)
-{
-    for (int i = 0; i < 4; i++)
-    {
-        toutDroit(largeur);
-        tournerDroite(90);
-    }
-}
-
-void triangle (int largeur)
-{
-    for (int i = 0; i < 3; i++)
-    {
-        toutDroit(largeur);
-        tournerDroite(120);
-    }
 }
 
 void trajectoireCirculaire (int rayonTrajectoire, int angle) // Rayon en millimètres et angle en degrès
@@ -395,15 +383,27 @@ void trajectoireCirculaire (int rayonTrajectoire, int angle) // Rayon en millim�
     ledcWrite(CHANNEL_MOTOR_RIGHT, 0);
 }
 
+void carre (int largeur)
+{
+    for (int i = 0; i < 4; i++)
+    {
+        toutDroit(largeur);
+        tournerDroite(90);
+    }
+}
+
+void triangle (int largeur)
+{
+    for (int i = 0; i < 3; i++)
+    {
+        toutDroit(largeur);
+        tournerDroite(120);
+    }
+}
+
 void cercle (int diametre)
 {
     trajectoireCirculaire(diametre/2, 360); // On fait faire au robot une trajectoire circulaire sur 360 degrés
-}
-
-void attendre (int temps) // Fonction permettant d'attendre pendant un temps exprimé en millisecondes
-{
-    unsigned long currentTime = millis();
-    while (millis() < currentTime + temps) if (!etatBoutonOnOff) break;
 }
 
 void suiviLigne () // La fonction tourne à l'infini
