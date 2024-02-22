@@ -549,7 +549,7 @@ void loop ()
             if (validPressed)
             {
                 validPressed = 0;
-                toutDroit(500);
+                toutDroit(1000);
                 validPressed = 0;
             }
             break;
@@ -613,33 +613,17 @@ void loop ()
                         client.println();
 
                         // turns the GPIOs on and off
-                            if(header.indexOf("GET /on") >= 0){
-                                Serial.println("on");
-
-                            }else if (header.indexOf("GET /off") >= 0){
-                                Serial.println("off");
-
-                            }else if(header.indexOf("GET /Avant") >= 0){
-                                Serial.println("En avant");
-                            }else if(header.indexOf("GET /Gauche") >= 0){
-                                Serial.println("A gauche");
-                            }else if(header.indexOf("GET /Droite") >= 0){
-                                Serial.println("A droite");
-                            }else if(header.indexOf("GET /Arriere") >= 0){
-                                Serial.println("En arrière");
-                            }else if(header.indexOf("GET /Triangle") >= 0){
-                                Serial.println("Triangle");
-                            }else if(header.indexOf("GET /Suivideligne") >= 0){
-                                Serial.println("Suivi de ligne");
-                            }else if(header.indexOf("GET /Lignedroite") >= 0){
-                                Serial.println("Ligne droite");
-                            }else if(header.indexOf("GET /Carre") >= 0){
-                                Serial.println("Carre");
-                            }else if(header.indexOf("GET /Evitementdobstacle") >= 0){
-                                Serial.println("Evitement d'obstacle");
-                            }else if(header.indexOf("GET /Cercle") >= 0){
-                                Serial.println("Cercle");
-                            }
+                            if (header.indexOf("GET /off") >= 0) swapOnOff();
+                            else if(header.indexOf("GET /Avant") >= 0) toutDroit(100);
+                            else if(header.indexOf("GET /Gauche") >= 0) tournerGauche(90);
+                            else if(header.indexOf("GET /Droite") >= 0) tournerDroite(90);
+                            else if(header.indexOf("GET /Arriere") >= 0);
+                            else if(header.indexOf("GET /Triangle") >= 0) triangle(500);
+                            else if(header.indexOf("GET /Suivideligne") >= 0) suiviLigne();
+                            else if(header.indexOf("GET /Lignedroite") >= 0) toutDroit(1000);
+                            else if(header.indexOf("GET /Carre") >= 0) carre(500);
+                            else if(header.indexOf("GET /Evitementdobstacle") >= 0) evitementObstacles();
+                            else if(header.indexOf("GET /Cercle") >= 0) cercle(500);
 
                         // Display the HTML web page
                         client.println("<!DOCTYPE html><html>");
