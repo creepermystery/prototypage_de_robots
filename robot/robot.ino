@@ -11,12 +11,12 @@ const int PIN_ODOMETER_A_RIGHT = 22;
 const int PIN_ODOMETER_B_RIGHT = 23;
 
 // pins IR terrestres
-const int PIN_FLOOR_IR_LEFT = 32;
+const int PIN_FLOOR_IR_LEFT = 25;
 const int PIN_FLOOR_IR_RIGHT = 26;
 
 // pins IR frontaux
 const int PIN_BACK_IR = 33;
-const int PIN_FRONT_IR = 25;
+const int PIN_FRONT_IR = 32;
 
 // pins boutons
 const int PIN_BUTTON_VALID = 16;
