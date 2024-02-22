@@ -3,8 +3,8 @@
 
 // Replace with your network credentials
 
-const char* ssid = "JUNIA_LAB";
-const char* password = "813nV3nue@";
+//const char* ssid = "JUNIA_LAB";
+//const char* password = "813nV3nue@";
 const char* ssid = "Freebox-4A8444";
 const char* password = "conpernem-alarius*-exaruerat-oblito";
 
