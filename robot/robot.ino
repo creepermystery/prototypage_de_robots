@@ -47,8 +47,8 @@ const float ECART_ROUES = 21.5;
 const int LIMITE_DECALAGE = 100;
 
 // variables globales
-volatile int compteurDroite = 0;
-volatile int compteurGauche = 0;
+volatile long compteurDroite = 0;
+volatile long compteurGauche = 0;
 volatile bool etatBoutonOnOff = 0;
 volatile int choix = 1;
 volatile bool validPressed = 0;
@@ -326,36 +326,43 @@ void triangle (int largeur)
 
 void trajectoireCirculaire (int rayonTrajectoire, int angle) // Rayon en millimètres et angle en degrès
 {
+    compteurDroite = 0;
+    compteurGauche = 0;
+
     int channelRoueExterieure;
     int channelRoueInterieure;
+
+    volatile long *compteurExterieur;
+    volatile long *compteurInterieur;
 
     if (angle > 0) // Virage à gauche
     {
         channelRoueExterieure = CHANNEL_MOTOR_RIGHT;
         channelRoueInterieure = CHANNEL_MOTOR_LEFT;
+        compteurExterieur = &compteurDroite;
+        compteurInterieur = &compteurGauche;
     }
     else if (angle < 0) // Virage à droite
     {
         channelRoueExterieure = CHANNEL_MOTOR_LEFT;
         channelRoueInterieure = CHANNEL_MOTOR_RIGHT;
+        compteurExterieur = &compteurGauche;
+        compteurInterieur = &compteurDroite;
     }
     else return; // Si l'angle est égal à 0 on stoppe la fonction
 
-    int rayonCercleExterieur = rayonTrajectoire + RAYON_ROUE/2.0; // Rayon du cercle parcouru par chaque roue
-    int rayonCercleInterieur = rayonTrajectoire - RAYON_ROUE/2.0;
+    float rayonCercleExterieur = rayonTrajectoire + ECART_ROUES/2.0; // Rayon du cercle parcouru par chaque roue
+    float rayonCercleInterieur = rayonTrajectoire - ECART_ROUES/2.0;
 
-    float longueurArcExterieur = rayonCercleExterieur * (PI/180) * angle; // Longueur de l'arc parcouru par chaque roue
-    float longueurArcInterieur = rayonCercleInterieur * (PI/180) * angle;
+    float longueurArcExterieur = rayonCercleExterieur * (PI/180.0) * angle; // Longueur de l'arc parcouru par chaque roue
+    float longueurArcInterieur = rayonCercleInterieur * (PI/180.0) * angle;
 
     float rapportDeuxArcs = longueurArcInterieur/longueurArcExterieur;
-
-    float nombreToursRoueInterieure = longueurArcInterieur/(RAYON_ROUE*2*PI); // Nombre de tours que chaque roue doit effectuer
-    float nombreToursRoueExterieure = longueurArcExterieur/(RAYON_ROUE*2*PI);
 
     digitalWrite(PIN_DIR_MOTOR_LEFT, HIGH); // Les deux moteurs tournent vers l'avant
     digitalWrite(PIN_DIR_MOTOR_RIGHT, LOW);
 
-    ledcWrite(channelRoueExterieure, 255);
+    ledcWrite(channelRoueExterieure, 255); // On lance les moteurs à la vitesse nécessaire
     ledcWrite(channelRoueInterieure, 255*rapportDeuxArcs);
 
     float longueurParcourueArcExterieur = 0;
@@ -363,8 +370,8 @@ void trajectoireCirculaire (int rayonTrajectoire, int angle) // Rayon en millim�
     
     while (longueurParcourueArcExterieur < longueurArcExterieur && longueurParcourueArcInterieur < longueurArcInterieur) // Tant que les arcs ne sont pas complets on continue d'avancer
     {
-        longueurParcourueArcExterieur = 2*PI*RAYON_ROUE*(compteurDroite/(RAPPORT_REDUCTION_MOTEUR*CPR_ODOMETRE)); // Estimation de la longueur déjà parcourue par chaque roue
-        longueurParcourueArcInterieur = 2*PI*RAYON_ROUE*(compteurGauche/(RAPPORT_REDUCTION_MOTEUR*CPR_ODOMETRE));
+        longueurParcourueArcExterieur = 2*PI*RAYON_ROUE*(*compteurExterieur/(RAPPORT_REDUCTION_MOTEUR*CPR_ODOMETRE)); // Estimation de la longueur déjà parcourue par chaque roue
+        longueurParcourueArcInterieur = 2*PI*RAYON_ROUE*(*compteurInterieur/(RAPPORT_REDUCTION_MOTEUR*CPR_ODOMETRE));
 
         if (longueurParcourueArcExterieur*rapportDeuxArcs > longueurParcourueArcInterieur * 1.05) // Si le moteur extérieur se déplace trop vite
         {
@@ -381,7 +388,7 @@ void trajectoireCirculaire (int rayonTrajectoire, int angle) // Rayon en millim�
             ledcWrite(channelRoueExterieure, 255);
             ledcWrite(channelRoueInterieure, 255*rapportDeuxArcs);
         }
-        if (!etatBoutonOnOff) break;
+        if (!etatBoutonOnOff || choix != 6) break;
     }
 
     ledcWrite(CHANNEL_MOTOR_LEFT, 0); // On éteint les moteurs à la fin de la trajectoire
@@ -396,10 +403,10 @@ void cercle (int diametre)
 void attendre (int temps) // Fonction permettant d'attendre pendant un temps exprimé en millisecondes
 {
     unsigned long currentTime = millis();
-    while (millis() < currentTime + temps);
+    while (millis() < currentTime + temps) if (!etatBoutonOnOff) break;
 }
 
-void suiviLigne () // Actuellement la fonction tourne à l'infini
+void suiviLigne () // La fonction tourne à l'infini
 {
     int valuePWMLeft = 255;
     int valuePWMRight = 255;
@@ -407,7 +414,7 @@ void suiviLigne () // Actuellement la fonction tourne à l'infini
     digitalWrite(PIN_DIR_MOTOR_LEFT, HIGH);
     digitalWrite(PIN_DIR_MOTOR_RIGHT, LOW);
 
-    while (choix == 1)
+    while (true)
     {
         if (digitalRead(PIN_FLOOR_IR_LEFT)) valuePWMLeft = 0; // Si le robot perçoit la ligne gauche, on fait s'arrêter la roue gauche
         else valuePWMLeft = 255;
@@ -418,13 +425,14 @@ void suiviLigne () // Actuellement la fonction tourne à l'infini
         ledcWrite(CHANNEL_MOTOR_LEFT, valuePWMLeft);
         ledcWrite(CHANNEL_MOTOR_RIGHT, valuePWMRight);
 
-        if (!etatBoutonOnOff) break; // On arrête le programme de suivi de ligne si le bouton on/off est pressé
+        if (!etatBoutonOnOff || choix != 1) break; // On arrête le programme de suivi de ligne si le bouton on/off est pressé ou si le choix change
     }
+
     ledcWrite(CHANNEL_MOTOR_LEFT, 0); // On oublie pas d'arrêter les moteurs
     ledcWrite(CHANNEL_MOTOR_RIGHT, 0);
 }
 
-void evitementObstacles ()
+void evitementObstacles () // La fonction tourne à l'infini
 {
 
     digitalWrite(PIN_DIR_MOTOR_LEFT, HIGH);
@@ -433,7 +441,7 @@ void evitementObstacles ()
     ledcWrite(CHANNEL_MOTOR_LEFT, 255);
     ledcWrite(CHANNEL_MOTOR_RIGHT, 255);
 
-    while (choix == 2)
+    while (true)
     {
         
         if (analogRead(PIN_BACK_IR) > FILTER && analogRead(PIN_FRONT_IR)) // Si le capteur détecte un obstacle devant et derrière
@@ -463,7 +471,7 @@ void evitementObstacles ()
             ledcWrite(CHANNEL_MOTOR_RIGHT, 0);
         }
 
-        if (!etatBoutonOnOff) break; // On arrête le programme de d'évitement d'obstacles si le bouton on/off est pressé
+        if (!etatBoutonOnOff || choix != 2) break; // On arrête le programme de d'évitement d'obstacles si le bouton on/off est pressé ou si le choix change
     }
     ledcWrite(CHANNEL_MOTOR_LEFT, 0); // On oublie pas d'arrêter les moteurs
     ledcWrite(CHANNEL_MOTOR_RIGHT, 0);
@@ -489,6 +497,7 @@ void loop ()
             {
                 validPressed = 0;
                 suiviLigne();
+                validPressed = 0;
             }
             break;
 
@@ -498,6 +507,7 @@ void loop ()
             {
                 validPressed = 0;
                 evitementObstacles();
+                validPressed = 0;
             }
             break;
 
@@ -507,6 +517,7 @@ void loop ()
             {
                 validPressed = 0;
                 toutDroit(500);
+                validPressed = 0;
             }
             break;
 
@@ -516,6 +527,7 @@ void loop ()
             {
                 validPressed = 0;
                 carre(500);
+                validPressed = 0;
             }
             break;
 
@@ -525,6 +537,7 @@ void loop ()
             {
                 validPressed = 0;
                 triangle(500);
+                validPressed = 0;
             }
             break;
 
@@ -534,6 +547,7 @@ void loop ()
             {
                 validPressed = 0;
                 cercle(500);
+                validPressed = 0;
             }
             break;
 
