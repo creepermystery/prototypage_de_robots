@@ -60,7 +60,7 @@ unsigned long debounceIncrementerChoix = millis();
 unsigned long debounceDecrementerChoix = millis();
 unsigned long debounceOnOff = millis();
 
-void swapValid ()
+void swapValid () // Passe valid à 1
 {
     if (millis() - debounceValid > debounce)
     {
@@ -112,21 +112,22 @@ void swapOnOff () // Fonction de passage de ON à OFF
 
 void setup ()
 {
-    Serial.begin(9600);
-    // Pins moteurs
-    pinMode(PIN_MOTOR_LEFT, OUTPUT);
-    pinMode(PIN_MOTOR_RIGHT, OUTPUT);
+    // Pins moteurs gauche
     pinMode(PIN_DIR_MOTOR_LEFT, OUTPUT);
-    pinMode(PIN_DIR_MOTOR_RIGHT, OUTPUT);
+    pinMode(PIN_MOTOR_LEFT, OUTPUT);
     pinMode(PIN_ODOMETER_A_LEFT, INPUT_PULLUP);
-    pinMode(PIN_ODOMETER_A_RIGHT, INPUT_PULLUP);
     pinMode(PIN_ODOMETER_B_LEFT, INPUT_PULLUP);
-    pinMode(PIN_ODOMETER_B_RIGHT, INPUT_PULLUP);
 
     ledcAttachPin(PIN_MOTOR_LEFT, CHANNEL_MOTOR_LEFT);
-    ledcAttachPin(PIN_MOTOR_RIGHT, CHANNEL_MOTOR_RIGHT);
-
     ledcSetup(CHANNEL_MOTOR_LEFT, FREQ, RESOLUTION);
+
+    // Pins moteurs droite
+    pinMode(PIN_DIR_MOTOR_RIGHT, OUTPUT);
+    pinMode(PIN_MOTOR_RIGHT, OUTPUT);
+    pinMode(PIN_ODOMETER_A_RIGHT, INPUT_PULLUP);
+    pinMode(PIN_ODOMETER_B_RIGHT, INPUT_PULLUP);
+
+    ledcAttachPin(PIN_MOTOR_RIGHT, CHANNEL_MOTOR_RIGHT);
     ledcSetup(CHANNEL_MOTOR_RIGHT, FREQ, RESOLUTION);
 
     // Pins IR terrestres
@@ -160,14 +161,10 @@ void setup ()
     attachInterrupt(PIN_ODOMETER_A_LEFT, triggerOdometreDroite, FALLING);
     attachInterrupt(PIN_ODOMETER_A_RIGHT, triggerOdometreGauche, FALLING);
 
-    // Interruptions boutons choix
+    // Interruptions boutons
     attachInterrupt(PIN_BUTTON_DOWN, decrementerChoix, FALLING);
     attachInterrupt(PIN_BUTTON_UP, incrementerChoix, FALLING);
-
-    // Interruption on/off
     attachInterrupt(PIN_BUTTON_ON_OFF, swapOnOff, FALLING);
-
-    // Interruption valid
     attachInterrupt(PIN_BUTTON_VALID, swapValid, FALLING);
 }
 
