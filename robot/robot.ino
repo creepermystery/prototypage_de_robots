@@ -44,7 +44,7 @@ const int CPR_ODOMETRE = 6;
 const int RAYON_ROUE = 33;
 const int FILTER = 1800;
 const float ECART_ROUES = 21.5;
-const int                                                                    = 100;
+const int LIMITE_DECALAGE = 100;
 
 // variables globales
 volatile int compteurDroite = 0;
@@ -175,14 +175,17 @@ void tournerDroite (int angle)
 {
     compteurDroite = 0;
     compteurGauche = 0;
+
     float angleEstime = 0;
+
     int distanceRoueDroite = 0;
     int distanceRoueGauche = 0;
+
     int err = 0;
 
-    ledcWrite(CHANNEL_MOTOR_LEFT, 70);                // On choisit les bonnes direction de rotation des roues et on démarre le virage
+    ledcWrite(CHANNEL_MOTOR_LEFT, 255); // On choisit les bonnes direction de rotation des roues et on démarre le virage
     digitalWrite(PIN_DIR_MOTOR_LEFT, LOW);
-    ledcWrite(CHANNEL_MOTOR_RIGHT, 70);
+    ledcWrite(CHANNEL_MOTOR_RIGHT, 255);
     digitalWrite(PIN_DIR_MOTOR_RIGHT, LOW);
 
     while (angleEstime < angle) // On attend que le virage soit fait
@@ -195,19 +198,21 @@ void tournerDroite (int angle)
 
         if (err > LIMITE_DECALAGE)
         {
-            ledcWrite(CHANNEL_MOTOR_LEFT, 70);  // ...Si le moteur droit va plus vite
-            ledcWrite(CHANNEL_MOTOR_RIGHT, 50);
+            ledcWrite(CHANNEL_MOTOR_LEFT, 255);  // ...Si le moteur droit va plus vite
+            ledcWrite(CHANNEL_MOTOR_RIGHT, 255-20);
         }
         else if (err < -1*LIMITE_DECALAGE)
         {
-            ledcWrite(CHANNEL_MOTOR_LEFT, 50); // ...Si le moteur gauche va plus vite
-            ledcWrite(CHANNEL_MOTOR_RIGHT, 70);
+            ledcWrite(CHANNEL_MOTOR_LEFT, 255-20); // ...Si le moteur gauche va plus vite
+            ledcWrite(CHANNEL_MOTOR_RIGHT, 255);
         }
         else
         {
-            ledcWrite(CHANNEL_MOTOR_LEFT, 70); // ...Si les deux sont synchrones
-            ledcWrite(CHANNEL_MOTOR_RIGHT, 70);
+            ledcWrite(CHANNEL_MOTOR_LEFT, 255); // ...Si les deux sont synchrones
+            ledcWrite(CHANNEL_MOTOR_RIGHT, 255);
         }
+
+        if (!etatBoutonOnOff) break;
     }
 
     ledcWrite(CHANNEL_MOTOR_LEFT, 0); // On remet les sorties à zéro
@@ -251,6 +256,8 @@ void tournerGauche (int angle)
             ledcWrite(CHANNEL_MOTOR_LEFT, 70); // ...Si les deux sont synchrones
             ledcWrite(CHANNEL_MOTOR_RIGHT, 70);
         }
+
+        if (!etatBoutonOnOff) break;
     }
 
     ledcWrite(CHANNEL_MOTOR_LEFT, 0);                 // On remet les sorties à zéro
@@ -268,8 +275,8 @@ void toutDroit (int distanceCommandee)
     digitalWrite(PIN_DIR_MOTOR_LEFT, HIGH);
     digitalWrite(PIN_DIR_MOTOR_RIGHT, LOW);
 
-    ledcWrite(PIN_MOTOR_LEFT, 255);
-    ledcWrite(PIN_MOTOR_RIGHT, 255);
+    ledcWrite(CHANNEL_MOTOR_LEFT, 255);
+    ledcWrite(CHANNEL_MOTOR_RIGHT, 255);
 
     while (distanceR < distanceCommandee && distanceL < distanceCommandee)
     {
@@ -278,19 +285,21 @@ void toutDroit (int distanceCommandee)
 
         if (distanceR > distanceL*1.05)
         {
-            ledcWrite(PIN_MOTOR_LEFT, 255);
-            ledcWrite(PIN_MOTOR_RIGHT, 255-20);
+            ledcWrite(CHANNEL_MOTOR_LEFT, 255);
+            ledcWrite(CHANNEL_MOTOR_RIGHT, 255-20);
         }
         else if (distanceR*1.05 < distanceL)
         {
-            ledcWrite(PIN_MOTOR_LEFT, 255);
-            ledcWrite(PIN_MOTOR_RIGHT, 255-20);
+            ledcWrite(CHANNEL_MOTOR_LEFT, 255);
+            ledcWrite(CHANNEL_MOTOR_RIGHT, 255-20);
         }
         else
         {
-            ledcWrite(PIN_MOTOR_LEFT, 255);
-            ledcWrite(PIN_MOTOR_RIGHT, 255);
+            ledcWrite(CHANNEL_MOTOR_LEFT, 255);
+            ledcWrite(CHANNEL_MOTOR_RIGHT, 255);
         }
+
+        if (!etatBoutonOnOff) break;
     }
 
     ledcWrite(CHANNEL_MOTOR_LEFT, 0);
@@ -299,7 +308,7 @@ void toutDroit (int distanceCommandee)
 
 void carre (int largeur)
 {
-    for (int i = 0; i >= 4; i++)
+    for (int i = 0; i < 4; i++)
     {
         toutDroit(largeur);
         tournerDroite(90);
@@ -308,7 +317,7 @@ void carre (int largeur)
 
 void triangle (int largeur)
 {
-    for (int i = 0; i >= 3; i++)
+    for (int i = 0; i < 3; i++)
     {
         toutDroit(largeur);
         tournerDroite(120);
@@ -354,8 +363,8 @@ void trajectoireCirculaire (int rayonTrajectoire, int angle) // Rayon en millim�
     
     while (longueurParcourueArcExterieur < longueurArcExterieur && longueurParcourueArcInterieur < longueurArcInterieur) // Tant que les arcs ne sont pas complets on continue d'avancer
     {
-        longueurParcourueArcExterieur = 2*PI*(RAYON_ROUE/(RAPPORT_REDUCTION_MOTEUR*CPR_ODOMETRE)) * compteurGauche; // Estimation de la longueur déjà parcourue par chaque roue
-        longueurParcourueArcInterieur = 2*PI*(RAYON_ROUE/(RAPPORT_REDUCTION_MOTEUR*CPR_ODOMETRE)) * compteurDroite;
+        longueurParcourueArcExterieur = 2*PI*RAYON_ROUE*(compteurDroite/(RAPPORT_REDUCTION_MOTEUR*CPR_ODOMETRE)); // Estimation de la longueur déjà parcourue par chaque roue
+        longueurParcourueArcInterieur = 2*PI*RAYON_ROUE*(compteurGauche/(RAPPORT_REDUCTION_MOTEUR*CPR_ODOMETRE));
 
         if (longueurParcourueArcExterieur*rapportDeuxArcs > longueurParcourueArcInterieur * 1.05) // Si le moteur extérieur se déplace trop vite
         {
@@ -372,6 +381,7 @@ void trajectoireCirculaire (int rayonTrajectoire, int angle) // Rayon en millim�
             ledcWrite(channelRoueExterieure, 255);
             ledcWrite(channelRoueInterieure, 255*rapportDeuxArcs);
         }
+        if (!etatBoutonOnOff) break;
     }
 
     ledcWrite(CHANNEL_MOTOR_LEFT, 0); // On éteint les moteurs à la fin de la trajectoire
@@ -416,6 +426,13 @@ void suiviLigne () // Actuellement la fonction tourne à l'infini
 
 void evitementObstacles ()
 {
+
+    digitalWrite(PIN_DIR_MOTOR_LEFT, HIGH);
+    digitalWrite(PIN_DIR_MOTOR_RIGHT, LOW);
+
+    ledcWrite(CHANNEL_MOTOR_LEFT, 255);
+    ledcWrite(CHANNEL_MOTOR_RIGHT, 255);
+
     while (choix == 2)
     {
         
@@ -489,7 +506,7 @@ void loop ()
             if (validPressed)
             {
                 validPressed = 0;
-                toutDroit(10);
+                toutDroit(500);
             }
             break;
 
