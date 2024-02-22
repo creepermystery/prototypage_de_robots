@@ -2,14 +2,11 @@
 #include <WiFi.h>
 
 // Replace with your network credentials
-//const char* ssid = "Freebox-4A8444";
-//const char* password = "conpernem-alarius*-exaruerat-oblito";
-//const char* ssid = "JUNIA_STUDENTS";
-//const char* password = "813nV3nue@Jun1a";
+
 const char* ssid = "JUNIA_LAB";
 const char* password = "813nV3nue@";
-//const char* ssid = "Freebox-4A8444";
-//const char* password = "conpernem-alarius*-exaruerat-oblito";
+const char* ssid = "Freebox-4A8444";
+const char* password = "conpernem-alarius*-exaruerat-oblito";
 
 // pins moteurs gauche
 const int PIN_DIR_MOTOR_LEFT = 27;
