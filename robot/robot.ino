@@ -1,3 +1,16 @@
+// Load Wi-Fi library
+#include <WiFi.h>
+
+// Replace with your network credentials
+//const char* ssid = "Freebox-4A8444";
+//const char* password = "conpernem-alarius*-exaruerat-oblito";
+//const char* ssid = "JUNIA_STUDENTS";
+//const char* password = "813nV3nue@Jun1a";
+const char* ssid = "JUNIA_LAB";
+const char* password = "813nV3nue@";
+//const char* ssid = "Freebox-4A8444";
+//const char* password = "conpernem-alarius*-exaruerat-oblito";
+
 // pins moteurs gauche
 const int PIN_DIR_MOTOR_LEFT = 27;
 const int PIN_MOTOR_LEFT = 14;
@@ -45,6 +58,7 @@ const int RAYON_ROUE = 33;
 const int FILTER = 1800;
 const float ECART_ROUES = 21.5;
 const int LIMITE_DECALAGE = 100;
+const long timeoutTime = 2000;
 
 // variables globales
 volatile long compteurDroite = 0;
@@ -52,6 +66,11 @@ volatile long compteurGauche = 0;
 volatile bool etatBoutonOnOff = 0;
 volatile int choix = 1;
 volatile bool validPressed = 0;
+String header;
+String state = "off";
+unsigned long currentTime = millis();
+unsigned long previousTime = 0;
+WiFiServer server(80);
 
 // Anti-Rebonds
 const int debounce = 200;
