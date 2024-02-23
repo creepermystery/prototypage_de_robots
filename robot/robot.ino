@@ -215,7 +215,7 @@ void tournerDroite (int angle)
     compteurDroite = 0;
     compteurGauche = 0;
 
-    float angleEstime = 0;
+    float angleEstime = 0.0;
 
     int distanceRoueDroite = 0;
     int distanceRoueGauche = 0;
@@ -229,8 +229,8 @@ void tournerDroite (int angle)
 
     while (angleEstime < angle) // On attend que le virage soit fait
     {
-        distanceRoueDroite = 2*PI*RAYON_ROUE * abs(compteurDroite)/(CPR_ODOMETRE*RAPPORT_REDUCTION_MOTEUR);
-        distanceRoueGauche = 2*PI*RAYON_ROUE * abs(compteurGauche)/(CPR_ODOMETRE*RAPPORT_REDUCTION_MOTEUR);
+        distanceRoueDroite = 2.0*PI*RAYON_ROUE * abs(compteurDroite)/(CPR_ODOMETRE*RAPPORT_REDUCTION_MOTEUR);
+        distanceRoueGauche = 2.0*PI*RAYON_ROUE * abs(compteurGauche)/(CPR_ODOMETRE*RAPPORT_REDUCTION_MOTEUR);
         angleEstime = abs(distanceRoueDroite/(ECART_ROUES/2.0) + distanceRoueGauche/(ECART_ROUES/2.0))/2.0;
 
         err = abs(compteurDroite) - abs(compteurGauche);  // On ajuste la rotation selon le décalage des odomètres
@@ -262,9 +262,12 @@ void tournerGauche (int angle)
 {
     compteurDroite = 0;
     compteurGauche = 0;
-    float angleEstime = 0;
+	
+    float angleEstime = 0.0;
+	
     int distanceRoueDroite = 0;
     int distanceRoueGauche = 0;
+	
     int err = 0;
 
     ledcWrite(CHANNEL_MOTOR_LEFT, 70);                // On choisit les bonnes direction de rotation des roues et on démarre le virage
@@ -274,9 +277,9 @@ void tournerGauche (int angle)
 
     while (angleEstime < angle) // On attend que le virage soit fait
     {
-        distanceRoueDroite = 2*PI*RAYON_ROUE * abs(compteurDroite)/(CPR_ODOMETRE*RAPPORT_REDUCTION_MOTEUR);
-        distanceRoueGauche = 2*PI*RAYON_ROUE * abs(compteurGauche)/(CPR_ODOMETRE*RAPPORT_REDUCTION_MOTEUR);
-        angleEstime = (abs(distanceRoueDroite/(ECART_ROUES/2.0) + distanceRoueGauche/(ECART_ROUES/2.0))/2.0)*180/PI;
+        distanceRoueDroite = 2.0*PI*RAYON_ROUE * abs(compteurDroite)/(CPR_ODOMETRE*RAPPORT_REDUCTION_MOTEUR);
+        distanceRoueGauche = 2.0*PI*RAYON_ROUE * abs(compteurGauche)/(CPR_ODOMETRE*RAPPORT_REDUCTION_MOTEUR);
+        angleEstime = (abs(distanceRoueDroite/(ECART_ROUES/2.0) + distanceRoueGauche/(ECART_ROUES/2.0))/2.0)*180.0/PI;
 
         err = abs(compteurDroite) - abs(compteurGauche);  // On ajuste la rotation selon le décalage des odomètres
 
@@ -386,13 +389,13 @@ void trajectoireCirculaire (int rayonTrajectoire, int angle) // Rayon en millim�
     ledcWrite(channelRoueExterieure, 255); // On lance les moteurs à la vitesse nécessaire
     ledcWrite(channelRoueInterieure, 255*rapportDeuxArcs);
 
-    float longueurParcourueArcExterieur = 0;
-    float longueurParcourueArcInterieur = 0;
+    float longueurParcourueArcExterieur = 0.0;
+    float longueurParcourueArcInterieur = 0.0;
     
     while (longueurParcourueArcExterieur < longueurArcExterieur && longueurParcourueArcInterieur < longueurArcInterieur) // Tant que les arcs ne sont pas complets on continue d'avancer
     {
-        longueurParcourueArcExterieur = 2*PI*RAYON_ROUE*(*compteurExterieur/(RAPPORT_REDUCTION_MOTEUR*CPR_ODOMETRE)); // Estimation de la longueur déjà parcourue par chaque roue
-        longueurParcourueArcInterieur = 2*PI*RAYON_ROUE*(*compteurInterieur/(RAPPORT_REDUCTION_MOTEUR*CPR_ODOMETRE));
+        longueurParcourueArcExterieur = 2.0*PI*RAYON_ROUE*(*compteurExterieur/(RAPPORT_REDUCTION_MOTEUR*CPR_ODOMETRE)); // Estimation de la longueur déjà parcourue par chaque roue
+        longueurParcourueArcInterieur = 2.0*PI*RAYON_ROUE*(*compteurInterieur/(RAPPORT_REDUCTION_MOTEUR*CPR_ODOMETRE));
 
         if (longueurParcourueArcExterieur*rapportDeuxArcs > longueurParcourueArcInterieur * 1.05) // Si le moteur extérieur se déplace trop vite
         {
@@ -436,7 +439,7 @@ void triangle (int largeur)
 
 void cercle (int diametre)
 {
-    trajectoireCirculaire(diametre/2, 360); // On fait faire au robot une trajectoire circulaire sur 360 degrés
+    trajectoireCirculaire(diametre/2.0, 360); // On fait faire au robot une trajectoire circulaire sur 360 degrés
 }
 
 void suiviLigne () // La fonction tourne à l'infini
@@ -618,12 +621,36 @@ void loop ()
                             else if(header.indexOf("GET /Gauche") >= 0) tournerGauche(90);
                             else if(header.indexOf("GET /Droite") >= 0) tournerDroite(90);
                             else if(header.indexOf("GET /Arriere") >= 0);
-                            else if(header.indexOf("GET /Triangle") >= 0) triangle(500);
-                            else if(header.indexOf("GET /Suivideligne") >= 0) suiviLigne();
-                            else if(header.indexOf("GET /Lignedroite") >= 0) toutDroit(1000);
-                            else if(header.indexOf("GET /Carre") >= 0) carre(500);
-                            else if(header.indexOf("GET /Evitementdobstacle") >= 0) evitementObstacles();
-                            else if(header.indexOf("GET /Cercle") >= 0) cercle(500);
+                            else if(header.indexOf("GET /Triangle") >= 0)
+							{
+								choix = 5;
+								validPressed = 1;
+							}
+                            else if(header.indexOf("GET /Suivideligne") >= 0)
+							{
+								choix = 1;
+								validPressed = 1;
+							}
+                            else if(header.indexOf("GET /Lignedroite") >= 0)
+							{
+								choix = 3;
+								validPressed = 1;
+							}
+                            else if(header.indexOf("GET /Carre") >= 0)
+							{
+								choix = 4;
+								validPressed = 1;
+							}
+                            else if(header.indexOf("GET /Evitementdobstacle") >= 0)
+							{
+								choix = 2;
+								validPressed = 1;
+							}
+                            else if(header.indexOf("GET /Cercle") >= 0)
+							{
+								choix = 6;
+								validPressed = 1;
+							}
 
                         // Display the HTML web page
                         client.println("<!DOCTYPE html><html>");
